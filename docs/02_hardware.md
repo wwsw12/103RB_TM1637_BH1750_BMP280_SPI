@@ -4,31 +4,29 @@
 
 ## 1. 구성 요소와 역할 (코드 기준)
 
-| 장치 | 역할 | 확인 근거 |
-|---|---|---|
-| STM32F103RBT6 | 마스터 MCU | `.ioc` `Mcu.CPN=STM32F103RBT6` |
-| BH1750 | 조도 센서, I2C 7-bit 주소 0x23 | `bh1750.h: BH1750_I2C_ADDR (0x23 << 1)` |
-| BMP280 | 기압/온도 센서, SPI 접속 | `bmp280.c` Chip ID 0x58 확인 로직 |
-| TM1637 | 7-segment LED 드라이버 (4-digit) | `tm1637.c` 폰트/커맨드 0x40, 0xC0, 0x88 |
-| USB-UART 경로 | PC 로그 (USART2) | `main.c` 배너 "USART2 (PA2/PA3) 115200bps PC Tera Term" |
+| 장치 | 역할 | 
+|---|---|
+| STM32F103RBT6 | 마스터 MCU |
+| BH1750 | 조도 센서, I2C 7-bit 주소 0x23 |
+| BMP280 | 기압/온도 센서, SPI 접속 |
+| TM1637 | 7-segment LED 드라이버 (4-digit) |
+| USB-UART 경로 | PC 로그 (USART2) |
 
 ## 2. MCU 핀 할당표 (`.ioc` + `main.h` + `stm32f1xx_hal_msp.c`)
 
 | 핀 | 기능 | GPIO 모드 (생성 코드) | 초기 레벨 | 연결 대상 |
 |---|---|---|---|---|
-| PA2 | USART2_TX | AF Push-Pull | — | PC 수신 |
+| PA2 | USART2_TX |  Push-Pull | — | PC 수신 |
 | PA3 | USART2_RX | Input (No pull) | — | PC 송신 (코드상 수신 미사용) |
 | PA4 | `BMP280_CS` | Output PP, High speed | **High** (비선택) | BMP280 CSB |
-| PA5 | SPI1_SCK | AF Push-Pull | — | BMP280 SCK |
+| PA5 | SPI1_SCK |  Push-Pull | — | BMP280 SCK |
 | PA6 | SPI1_MISO | Input (No pull) | — | BMP280 SDO |
-| PA7 | SPI1_MOSI | AF Push-Pull | — | BMP280 SDI |
-| PB6 | I2C1_SCL | **AF Open-Drain** | — | BH1750 SCL |
-| PB7 | I2C1_SDA | **AF Open-Drain** | — | BH1750 SDA |
+| PA7 | SPI1_MOSI |  Push-Pull | — | BMP280 SDI |
+| PB6 | I2C1_SCL |  Open-Drain | — | BH1750 SCL |
+| PB7 | I2C1_SDA |  Open-Drain | — | BH1750 SDA |
 | PB8 | `TM1637_CLK` | Output Push-Pull, High speed | High | TM1637 CLK |
-| PB9 | `TM1637_DIO` | **Output Open-Drain + Pull-up**, High speed | High | TM1637 DIO |
+| PB9 | `TM1637_DIO` | Output Open-Drain + Pull-up, High speed | High | TM1637 DIO |
 | PA13 / PA14 | SWDIO / SWCLK | Serial Wire | — | ST-Link |
-
-> `__HAL_AFIO_REMAP_SWJ_NOJTAG()` 사용 (`stm32f1xx_hal_msp.c:76`): JTAG 핀은 해제하고 SWD만 유지.
 
 ## 3. 인터페이스별 신호선과 데이터 방향
 
@@ -37,7 +35,7 @@
 | 신호 | 방향 | 비고 |
 |---|---|---|
 | SCL (PB6) | MCU → 센서 (마스터 클럭) | 100 kHz (Standard mode) |
-| SDA (PB7) | 양방향 | Open-Drain 이므로 **외부 풀업 필수** |
+| SDA (PB7) | 양방향 | Open-Drain |
 
 - 주소 바이트: 7-bit `0x23` → HAL 규약상 `0x23 << 1 = 0x46` 전달 (HAL이 R/W 비트를 OR).
 - 통신: `Power On(0x01)` → `Continuous H-Res Mode(0x10)` 전송 후, 매 읽기마다 2바이트 수신.
@@ -62,7 +60,7 @@ TM1637의 2선 프로토콜은 I2C와 비슷한 Start/Stop/ACK 형태이나 **I2
 
 ### 3-4. USART2
 
-115200 bps, 8N1, 흐름제어 없음. 신호 레벨(3.3 V TTL)과 USB 변환 경로(ST-Link VCP 또는 외부 변환기)는 **코드로 확인 불가**.
+115200 bps
 
 ## 4. 전기적 특성 (코드로 확인된 값 vs 미확인)
 
