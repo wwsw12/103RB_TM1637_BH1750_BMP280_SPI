@@ -48,8 +48,8 @@ flowchart LR
 | 항목 | 내용 |
 |---|---|
 | MCU | STM32F103RBT6 (Cortex-M3, Flash 128 KB, RAM 20 KB) |
-| 클럭 | HSI/2 × PLL16 = **64 MHz**, APB1 32 MHz, APB2 64 MHz |
-| IDE / 툴체인 | STM32CubeIDE, arm-none-eabi-gcc, `-O0 -g3` (Debug), nano.specs, printf float 활성 |
+| 클럭 | HSI/2 × PLL16 = **64 MHz**|
+| IDE | STM32CubeIDE|
 | 펌웨어 패키지 | STM32Cube FW_F1 V1.8.7 (HAL) |
 | 방식 | 베어메탈, 폴링(blocking HAL) |
 
@@ -57,7 +57,7 @@ flowchart LR
 
 | 신호 | MCU 핀 | 연결 대상 |
 |---|---|---|
-| I2C1_SCL / SDA | PB6 / PB7 (AF Open-Drain) | BH1750 (7-bit 주소 0x23) |
+| I2C1_SCL / SDA | PB6 / PB7 (Open-Drain) | BH1750 (7-bit 주소 0x23) |
 | SPI1_SCK / MISO / MOSI | PA5 / PA6 / PA7 | BMP280 |
 | BMP280_CS | PA4 (GPIO Output, 초기 High) | BMP280 CSB |
 | TM1637_CLK / DIO | PB8 (Push-Pull) / PB9 (Open-Drain + Pull-up) | TM1637 |
@@ -69,9 +69,13 @@ flowchart LR
 ## 6. 핵심 펌웨어 구현 내용
 
 1. **주기 분리 Super-loop** — `HAL_GetTick()` 차분으로 100 ms 센싱 / 500 ms UART 출력. `HAL_Delay()`는 부팅 시에만 사용 (`main.c`)
-2. **BMP280 보정 파이프라인** — 온도 계산으로 `t_fine`을 먼저 산출해야 기압 보정이 가능한 의존성을 코드 순서로 반영 (`bmp280.c: BMP280_ReadData`)
+
+2.**BMP280 보정 파이프라인** — 온도 계산으로 `t_fine`을 먼저 산출해야 기압 보정이 가능한 의존성을 코드 순서로 반영 (`bmp280.c: BMP280_ReadData`)
+
 3. **SPI 레지스터 접근 규약** — Read는 주소 bit7=1, Write는 bit7=0, CS를 소프트웨어(GPIO)로 제어 (`BMP280_SPI_ReadRegs/WriteReg`)
+
 4. **TM1637 비트뱅잉** — LSB-first 8bit 전송 + 9번째 클럭 ACK 샘플링. DIO를 Open-Drain+Pull-up으로 두어 ACK 입력 시 핀 충돌 방지 (`tm1637.c`)
+
 5. **불필요한 버스 트랜잭션 제거** — 기압 정수값이 바뀔 때만 TM1637 갱신, UART는 캐시된 값 출력
 
 자세한 내용: [04_firmware_implementation.md](docs/04_firmware_implementation.md)
