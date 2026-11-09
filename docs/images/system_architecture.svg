@@ -1,93 +1,143 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="2200" height="1140" viewBox="0 0 2200 1140" role="img" aria-labelledby="title description">
-  <title id="title">시스템 소프트웨어 아키텍처</title>
-  <desc id="description">Application 스케줄러가 사용자 드라이버와 변수, UART 및 SysTick을 사용하고 각 드라이버가 ST HAL 함수를 호출하는 구조</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080" role="img" aria-labelledby="title description">
+  <title id="title">STM32F103RBT6 software architecture</title>
+  <desc id="description">16:9 software architecture with orthogonal call paths from the main superloop to user drivers and STM32 HAL.</desc>
   <defs>
-    <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="9" markerHeight="9" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#425775"/>
+    <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="10" markerHeight="10" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#40536f"/>
     </marker>
     <style>
-      .group { fill: #f8fafc; stroke: #dce4ef; stroke-width: 2; }
-      .node { fill: #fff; stroke: #aab8cf; stroke-width: 2; }
-      .group-title { fill: #263b58; font: 600 22px 'Noto Sans KR', 'Malgun Gothic', sans-serif; }
-      .group-subtitle { fill: #64748b; font: 15px 'Noto Sans KR', 'Malgun Gothic', sans-serif; }
-      .node-title { fill: #243855; font: 600 20px 'Noto Sans KR', 'Malgun Gothic', sans-serif; }
-      .node-detail { fill: #52647e; font: 18px 'Noto Sans KR', 'Malgun Gothic', sans-serif; }
-      .code { fill: #243855; font: 18px 'DejaVu Sans Mono', Consolas, monospace; }
-      .edge { fill: none; stroke: #425775; stroke-width: 2.5; marker-end: url(#arrow); }
-      .edge-label { fill: #52647e; font: 17px 'DejaVu Sans Mono', Consolas, monospace; }
+      .group { fill: #f4f7fb; stroke: #d7e0ec; stroke-width: 2; }
+      .node { fill: #ffffff; stroke: #a9b8cb; stroke-width: 2; }
+      .node-accent { fill: #ffffff; stroke: #6b8ebd; stroke-width: 2.5; }
+      .group-title { fill: #263b55; font: 700 20px 'Noto Sans KR', 'Malgun Gothic', sans-serif; letter-spacing: 1.2px; }
+      .group-detail { fill: #61728a; font: 16px 'Noto Sans KR', 'Malgun Gothic', sans-serif; }
+      .node-title { fill: #263b55; font: 700 21px 'Noto Sans KR', 'Malgun Gothic', sans-serif; }
+      .section { fill: #3970a8; font: 700 15px 'Noto Sans KR', 'Malgun Gothic', sans-serif; letter-spacing: .5px; }
+      .text { fill: #34465e; font: 17px 'Noto Sans KR', 'Malgun Gothic', sans-serif; }
+      .small { fill: #566981; font: 15px 'Noto Sans KR', 'Malgun Gothic', sans-serif; }
+      .mono { fill: #34465e; font: 16px 'DejaVu Sans Mono', Consolas, monospace; }
+      .edge { fill: none; stroke: #40536f; stroke-width: 2.5; stroke-linecap: square; stroke-linejoin: miter; marker-end: url(#arrow); }
+      .edge-label { fill: #40536f; font: 15px 'DejaVu Sans Mono', Consolas, monospace; }
+      .rule { stroke: #e2e8f0; stroke-width: 1.5; }
     </style>
   </defs>
 
-  <rect width="2200" height="1140" fill="#fff"/>
+  <rect width="1920" height="1080" fill="#ffffff"/>
 
-  <!-- Group backgrounds are drawn before the connections and nodes. -->
-  <rect class="group" x="40" y="400" width="440" height="540" rx="14"/>
-  <text class="group-title" x="70" y="438">Application</text>
-  <text class="group-subtitle" x="220" y="438">main.c USER CODE</text>
+  <text x="60" y="58" fill="#20334d" font-family="'Noto Sans KR', 'Malgun Gothic', sans-serif" font-size="30" font-weight="700">소프트웨어 아키텍처</text>
+  <text x="60" y="88" class="group-detail">STM32F103RBT6 · main.c superloop · 동기식 HAL 호출</text>
+  <text x="1860" y="58" text-anchor="end" class="group-detail">16:9 · 1920 × 1080</text>
 
-  <rect class="group" x="750" y="45" width="460" height="690" rx="14"/>
-  <text class="group-title" x="780" y="83">사용자 드라이버</text>
+  <rect class="group" x="40" y="120" width="500" height="850" rx="12"/>
+  <text class="group-title" x="70" y="160">APPLICATION</text>
+  <text class="group-detail" x="70" y="185">main.c</text>
 
-  <rect class="group" x="1495" y="45" width="665" height="1045" rx="14"/>
-  <text class="group-title" x="1525" y="83">ST HAL</text>
-  <text class="group-subtitle" x="1620" y="83">Drivers/</text>
+  <rect class="group" x="700" y="120" width="500" height="700" rx="12"/>
+  <text class="group-title" x="730" y="160">USER DRIVERS</text>
+  <text class="group-detail" x="730" y="185">센서 · 표시 모듈</text>
 
-  <!-- Each connection is one straight segment from one node border to another. -->
-  <g aria-label="연결">
-    <line class="edge" x1="430" y1="480" x2="805" y2="160"/>
-    <line class="edge" x1="430" y1="515" x2="805" y2="400"/>
-    <line class="edge" x1="430" y1="550" x2="805" y2="640"/>
-    <line class="edge" x1="257.5" y1="640" x2="257.5" y2="780"/>
-    <line class="edge" x1="1165" y1="160" x2="1535" y2="160"/>
-    <line class="edge" x1="1165" y1="400" x2="1535" y2="400"/>
-    <line class="edge" x1="1165" y1="415" x2="1535" y2="555"/>
-    <line class="edge" x1="1165" y1="640" x2="1535" y2="595"/>
-    <line class="edge" x1="430" y1="620" x2="1535" y2="860"/>
-    <line class="edge" x1="430" y1="630" x2="1535" y2="1010"/>
+  <rect class="group" x="1380" y="120" width="500" height="890" rx="12"/>
+  <text class="group-title" x="1410" y="160">STM32 HAL</text>
+  <text class="group-detail" x="1410" y="185">Drivers/ · MSP 초기화</text>
+
+  <!-- Every call/use path is orthogonal and enters/exits at a node edge. -->
+  <g aria-label="호출 또는 사용 관계">
+    <path class="edge" d="M 500 345 H 600 V 250 H 1420"/>
+    <path class="edge" d="M 500 420 H 560 V 385 H 750"/>
+    <path class="edge" d="M 500 490 H 620 V 555 H 750"/>
+    <path class="edge" d="M 500 585 H 680 V 740 H 750"/>
+    <path class="edge" d="M 500 610 H 630 V 855 H 1420"/>
+    <path class="edge" d="M 500 650 H 560 V 950 H 1420"/>
+    <path class="edge" d="M 1150 385 H 1420"/>
+    <path class="edge" d="M 1150 555 H 1420"/>
+    <path class="edge" d="M 1150 570 H 1260 V 690 H 1420"/>
+    <path class="edge" d="M 1150 740 H 1420"/>
   </g>
-  <text class="edge-label" x="1240" y="772">printf → __io_putchar</text>
 
   <g aria-label="Application">
-    <rect class="node" x="85" y="460" width="345" height="180" rx="9"/>
-    <text class="node-title" x="110" y="510">while(1) 스케줄러</text>
-    <text class="node-detail" x="110" y="548">HAL_GetTick() 기반</text>
+    <rect class="node-accent" x="80" y="300" width="420" height="390" rx="8"/>
+    <text class="node-title" x="105" y="338">Application · main()</text>
+    <text class="section" x="105" y="375">STARTUP</text>
+    <text class="mono" x="105" y="403">HAL_Init · SystemClock_Config (64 MHz)</text>
+    <text class="mono" x="105" y="431" font-size="15">MX_GPIO_Init · MX_USART2_UART_Init</text>
+    <text class="mono" x="105" y="459">MX_I2C1_Init · MX_SPI1_Init</text>
+    <text class="mono" x="105" y="487">BH1750_Init · BMP280_Init · TM1637_Init</text>
+    <line class="rule" x1="105" y1="503" x2="475" y2="503"/>
+    <text class="section" x="105" y="531">SUPERLOOP</text>
+    <text class="mono" x="105" y="559">while (1) · HAL_GetTick()</text>
+    <text class="mono" x="105" y="587" font-size="15">100 ms · BH1750_ReadLux</text>
+    <text class="mono" x="105" y="615" font-size="15">BMP280_ReadData · 측정값 갱신</text>
+    <text class="mono" x="105" y="643" font-size="14">압력 변경 시 · TM1637_DisplayDecimal</text>
+    <text class="text" x="105" y="671">500 ms · printf 센서 로그</text>
 
-    <rect class="node" x="85" y="780" width="345" height="125" rx="9"/>
-    <text class="code" x="110" y="818">static float</text>
-    <text class="code" x="110" y="848">illuminance / temperature</text>
-    <text class="code" x="110" y="878">pressure / altitude</text>
+    <rect class="node" x="80" y="750" width="420" height="135" rx="8"/>
+    <text class="node-title" x="105" y="790">측정 데이터</text>
+    <text class="mono" x="105" y="827">illuminance · temperature</text>
+    <text class="mono" x="105" y="855">pressure · altitude</text>
+    <text class="small" x="475" y="870" text-anchor="end">Application 내부 저장값</text>
   </g>
 
   <g aria-label="사용자 드라이버">
-    <rect class="node" x="805" y="110" width="360" height="100" rx="9"/>
-    <text class="code" x="830" y="151">BH1750_Init</text>
-    <text class="code" x="830" y="181">BH1750_ReadLux</text>
+    <rect class="node" x="750" y="320" width="400" height="130" rx="8"/>
+    <text class="node-title" x="775" y="356">조도 측정</text>
+    <text class="mono" x="775" y="389">BH1750_Init · BH1750_ReadLux</text>
+    <text class="small" x="775" y="421">초기화 대기 · HAL_Delay(10 ms)</text>
 
-    <rect class="node" x="805" y="350" width="360" height="100" rx="9"/>
-    <text class="code" x="830" y="385">BMP280_Init / ReadData</text>
-    <text class="node-detail" x="830" y="418">보정식, 고도식</text>
+    <rect class="node" x="750" y="480" width="400" height="150" rx="8"/>
+    <text class="node-title" x="775" y="516">온도 · 기압 · 고도</text>
+    <text class="mono" x="775" y="549" font-size="15">BMP280_Init · BMP280_ReadData</text>
+    <text class="mono" x="775" y="579" font-size="14">BMP280_GetSeaLevelPressure</text>
+    <text class="small" x="775" y="609">init: HAL_Delay(10 ms)</text>
 
-    <rect class="node" x="805" y="590" width="360" height="100" rx="9"/>
-    <text class="code" x="830" y="625">TM1637_Init / DisplayDecimal</text>
-    <text class="code" x="830" y="655">DisplayString</text>
+    <rect class="node" x="750" y="670" width="400" height="140" rx="8"/>
+    <text class="node-title" x="775" y="706">7세그먼트 표시</text>
+    <text class="mono" x="775" y="739" font-size="14">TM1637_Init · TM1637_DisplayDecimal</text>
+    <text class="mono" x="775" y="771" font-size="14">TM1637_DisplayString · 비트뱅잉</text>
   </g>
 
-  <g aria-label="ST HAL">
-    <rect class="node" x="1535" y="110" width="585" height="100" rx="9"/>
-    <text class="code" x="1560" y="151">HAL_I2C_Master_Transmit / Receive</text>
-    <text class="code" x="1560" y="181">HAL_I2C_IsDeviceReady</text>
+  <g aria-label="STM32 HAL">
+    <rect class="node" x="1420" y="190" width="410" height="120" rx="8"/>
+    <text class="node-title" x="1445" y="223">보드 · 주변장치 초기화</text>
+    <text class="mono" x="1445" y="251" font-size="14">HAL_Init · HAL_RCC_* · HAL_Delay</text>
+    <text class="small" x="1445" y="278">HAL_*_Init · HAL_MspInit</text>
+    <text class="small" x="1445" y="301">HAL_*_MspInit · clock / GPIO</text>
 
-    <rect class="node" x="1535" y="350" width="585" height="100" rx="9"/>
-    <text class="code" x="1560" y="407">HAL_SPI_Transmit / Receive</text>
+    <rect class="node" x="1420" y="320" width="410" height="130" rx="8"/>
+    <text class="node-title" x="1445" y="356">I2C 서비스</text>
+    <text class="mono" x="1445" y="389">HAL_I2C_IsDeviceReady</text>
+    <text class="mono" x="1445" y="417">HAL_I2C_Master_Transmit / Receive</text>
+    <text class="small" x="1805" y="438" text-anchor="end">I2C1 · 100 kHz</text>
 
-    <rect class="node" x="1535" y="525" width="585" height="100" rx="9"/>
-    <text class="code" x="1560" y="582">HAL_GPIO_WritePin / ReadPin</text>
+    <rect class="node" x="1420" y="490" width="410" height="130" rx="8"/>
+    <text class="node-title" x="1445" y="526">SPI 서비스</text>
+    <text class="mono" x="1445" y="559">HAL_SPI_Transmit / Receive</text>
+    <text class="small" x="1805" y="591" text-anchor="end">SPI1 · Mode 3 · 8 MHz</text>
 
-    <rect class="node" x="1535" y="810" width="585" height="100" rx="9"/>
-    <text class="code" x="1560" y="867">HAL_UART_Transmit</text>
+    <rect class="node" x="1420" y="670" width="410" height="140" rx="8"/>
+    <text class="node-title" x="1445" y="706">GPIO 서비스</text>
+    <text class="mono" x="1445" y="739">HAL_GPIO_WritePin / ReadPin</text>
+    <text class="small" x="1445" y="771">BMP280 CS · TM1637 CLK / DIO</text>
 
-    <rect class="node" x="1535" y="960" width="585" height="100" rx="9"/>
-    <text class="code" x="1560" y="1001">HAL_GetTick</text>
-    <text class="node-detail" x="1560" y="1031">SysTick 1 ms</text>
+    <rect class="node" x="1420" y="820" width="410" height="70" rx="8"/>
+    <text class="node-title" x="1445" y="849">UART 출력</text>
+    <text class="mono" x="1445" y="876" font-size="14">HAL_UART_Transmit · USART2 115200</text>
+
+    <rect class="node" x="1420" y="900" width="410" height="100" rx="8"/>
+    <text class="node-title" x="1445" y="933">시스템 시간 기반</text>
+    <text class="mono" x="1445" y="961" font-size="14">HAL_GetTick() · 1 ms 시간값 조회</text>
+    <text class="small" x="1445" y="987">SysTick_Handler · HAL_IncTick() IRQ 갱신</text>
+  </g>
+
+  <text class="edge-label" x="790" y="841">printf → _write → __io_putchar</text>
+  <text class="small" x="1268" y="681">CS 제어</text>
+
+  <g aria-label="범례">
+    <path class="edge" d="M 70 1030 H 125"/>
+    <text class="text" x="140" y="1036">호출 / 사용</text>
+    <rect x="285" y="1018" width="20" height="20" rx="3" fill="#f4f7fb" stroke="#d7e0ec" stroke-width="1.5"/>
+    <text class="text" x="316" y="1036">그룹</text>
+    <rect x="400" y="1018" width="20" height="20" rx="3" fill="#ffffff" stroke="#a9b8cb" stroke-width="1.5"/>
+    <text class="text" x="431" y="1036">기능 블록</text>
+    <text class="small" x="1860" y="1036" text-anchor="end">시간값 조회(HAL_GetTick)와 tick 갱신(SysTick IRQ)은 별도 기능</text>
   </g>
 </svg>

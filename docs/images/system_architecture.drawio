@@ -1,0 +1,155 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" modified="2026-11-09T08:30:00.000Z" agent="Copilot" version="24.7.17" type="device">
+  <diagram id="architecture" name="Architecture">
+    <mxGraphModel dx="1920" dy="1080" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1920" pageHeight="1080" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="app-group" value="&lt;div style=&quot;font-family:Arial,'Noto Sans KR',sans-serif;font-size:20px;font-weight:700;letter-spacing:1px;color:#263b55&quot;&gt;APPLICATION&lt;/div&gt;&lt;div style=&quot;font-family:Arial,'Noto Sans KR',sans-serif;font-size:16px;color:#61728a;margin-top:8px&quot;&gt;main.c&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F4F7FB;strokeColor=#D7E0EC;strokeWidth=2;shadow=0;verticalAlign=top;align=left;spacingLeft=28;spacingTop=24;" vertex="1" parent="1">
+          <mxGeometry x="40" y="120" width="500" height="850" as="geometry" />
+        </mxCell>
+        <mxCell id="driver-group" value="&lt;div style=&quot;font-family:Arial,'Noto Sans KR',sans-serif;font-size:20px;font-weight:700;letter-spacing:1px;color:#263b55&quot;&gt;USER DRIVERS&lt;/div&gt;&lt;div style=&quot;font-family:Arial,'Noto Sans KR',sans-serif;font-size:16px;color:#61728a;margin-top:8px&quot;&gt;센서 · 표시 모듈&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F4F7FB;strokeColor=#D7E0EC;strokeWidth=2;shadow=0;verticalAlign=top;align=left;spacingLeft=28;spacingTop=24;" vertex="1" parent="1">
+          <mxGeometry x="700" y="120" width="500" height="700" as="geometry" />
+        </mxCell>
+        <mxCell id="hal-group" value="&lt;div style=&quot;font-family:Arial,'Noto Sans KR',sans-serif;font-size:20px;font-weight:700;letter-spacing:1px;color:#263b55&quot;&gt;STM32 HAL&lt;/div&gt;&lt;div style=&quot;font-family:Arial,'Noto Sans KR',sans-serif;font-size:16px;color:#61728a;margin-top:8px&quot;&gt;Drivers/ · MSP 초기화&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F4F7FB;strokeColor=#D7E0EC;strokeWidth=2;shadow=0;verticalAlign=top;align=left;spacingLeft=28;spacingTop=24;" vertex="1" parent="1">
+          <mxGeometry x="1380" y="120" width="500" height="890" as="geometry" />
+        </mxCell>
+        <mxCell id="title" value="소프트웨어 아키텍처" style="text;html=1;align=left;verticalAlign=middle;fontFamily=Noto Sans KR;fontSize=30;fontStyle=1;fontColor=#20334d;" vertex="1" parent="1">
+          <mxGeometry x="60" y="25" width="1000" height="42" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" value="STM32F103RBT6 · main.c superloop · 동기식 HAL 호출" style="text;html=1;align=left;verticalAlign=middle;fontFamily=Noto Sans KR;fontSize=16;fontColor=#61728a;" vertex="1" parent="1">
+          <mxGeometry x="60" y="63" width="1200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="canvas-note" value="16:9 · 1920 × 1080" style="text;html=1;align=right;verticalAlign=middle;fontFamily=Noto Sans KR;fontSize=16;fontColor=#61728a;" vertex="1" parent="1">
+          <mxGeometry x="1600" y="25" width="260" height="42" as="geometry" />
+        </mxCell>
+        <mxCell id="setup" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=0;html=1;strokeColor=#40536f;strokeWidth=2;endArrow=block;endFill=1;exitX=1;exitY=0.1154;exitPerimeter=1;entryX=0;entryY=0.5;entryPerimeter=1;" vertex="0" parent="1" source="app-main" target="hal-config" edge="1">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry">
+            <Array as="points">
+              <mxPoint x="600" y="345" />
+              <mxPoint x="600" y="250" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="main-bh" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=0;html=1;strokeColor=#40536f;strokeWidth=2;endArrow=block;endFill=1;exitX=1;exitY=0.3077;exitPerimeter=1;entryX=0;entryY=0.5;entryPerimeter=1;" vertex="0" parent="1" source="app-main" target="drv-bh" edge="1">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry">
+            <Array as="points">
+              <mxPoint x="560" y="420" />
+              <mxPoint x="560" y="385" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="main-bmp" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=0;html=1;strokeColor=#40536f;strokeWidth=2;endArrow=block;endFill=1;exitX=1;exitY=0.4872;exitPerimeter=1;entryX=0;entryY=0.5;entryPerimeter=1;" vertex="0" parent="1" source="app-main" target="drv-bmp" edge="1">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry">
+            <Array as="points">
+              <mxPoint x="620" y="490" />
+              <mxPoint x="620" y="555" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="main-tm" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=0;html=1;strokeColor=#40536f;strokeWidth=2;endArrow=block;endFill=1;exitX=1;exitY=0.7308;exitPerimeter=1;entryX=0;entryY=0.5;entryPerimeter=1;" vertex="0" parent="1" source="app-main" target="drv-tm" edge="1">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry">
+            <Array as="points">
+              <mxPoint x="680" y="585" />
+              <mxPoint x="680" y="740" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="uart" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=0;html=1;strokeColor=#40536f;strokeWidth=2;endArrow=block;endFill=1;exitX=1;exitY=0.7949;exitPerimeter=1;entryX=0;entryY=0.5;entryPerimeter=1;" vertex="0" parent="1" source="app-main" target="hal-uart" edge="1">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry">
+            <Array as="points">
+              <mxPoint x="630" y="610" />
+              <mxPoint x="630" y="855" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="tick" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=0;html=1;strokeColor=#40536f;strokeWidth=2;endArrow=block;endFill=1;exitX=1;exitY=0.8974;exitPerimeter=1;entryX=0;entryY=0.5;entryPerimeter=1;" vertex="0" parent="1" source="app-main" target="hal-time" edge="1">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry">
+            <Array as="points">
+              <mxPoint x="560" y="650" />
+              <mxPoint x="560" y="950" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="i2c" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=0;html=1;strokeColor=#40536f;strokeWidth=2;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitPerimeter=1;entryX=0;entryY=0.5;entryPerimeter=1;" vertex="0" parent="1" source="drv-bh" target="hal-i2c" edge="1">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" />
+        </mxCell>
+        <mxCell id="spi" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=0;html=1;strokeColor=#40536f;strokeWidth=2;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitPerimeter=1;entryX=0;entryY=0.5;entryPerimeter=1;" vertex="0" parent="1" source="drv-bmp" target="hal-spi" edge="1">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" />
+        </mxCell>
+        <mxCell id="cs" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=0;html=1;strokeColor=#40536f;strokeWidth=2;endArrow=block;endFill=1;exitX=1;exitY=0.6;exitPerimeter=1;entryX=0;entryY=0.1429;entryPerimeter=1;" vertex="0" parent="1" source="drv-bmp" target="hal-gpio" edge="1">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry">
+            <Array as="points">
+              <mxPoint x="1260" y="570" />
+              <mxPoint x="1260" y="690" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gpio" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=0;html=1;strokeColor=#40536f;strokeWidth=2;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitPerimeter=1;entryX=0;entryY=0.5;entryPerimeter=1;" vertex="0" parent="1" source="drv-tm" target="hal-gpio" edge="1">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" />
+        </mxCell>
+        <mxCell id="app-main" value="&lt;div style=&quot;font-family:Arial,'Noto Sans KR',sans-serif;font-size:21px;font-weight:700;color:#263b55;margin-bottom:12px&quot;&gt;Application · main()&lt;/div&gt;&lt;div style=&quot;font-family:monospace;font-size:16px;font-weight:700;line-height:1.55;color:#3970a8&quot;&gt;STARTUP&lt;/div&gt;&lt;div style=&quot;height:5px&quot;&gt;&lt;/div&gt;&lt;div style=&quot;font-family:monospace;font-size:14px;font-weight:400;line-height:1.55;color:#34465e&quot;&gt;HAL_Init · SystemClock_Config (64 MHz)&lt;/div&gt;&lt;div style=&quot;font-family:monospace;font-size:15px;font-weight:400;line-height:1.55;color:#34465e&quot;&gt;MX_GPIO_Init · MX_USART2_UART_Init&lt;/div&gt;&lt;div style=&quot;font-family:monospace;font-size:16px;font-weight:400;line-height:1.55;color:#34465e&quot;&gt;MX_I2C1_Init · MX_SPI1_Init&lt;/div&gt;&lt;div style=&quot;font-family:monospace;font-size:15px;font-weight:400;line-height:1.55;color:#34465e&quot;&gt;BH1750_Init · BMP280_Init · TM1637_Init&lt;/div&gt;&lt;div style=&quot;font-family:monospace;font-size:14px;font-weight:700;line-height:1.55;color:#3970a8&quot;&gt;SUPERLOOP&lt;/div&gt;&lt;div style=&quot;height:5px&quot;&gt;&lt;/div&gt;&lt;div style=&quot;font-family:monospace;font-size:16px;font-weight:400;line-height:1.55;color:#34465e&quot;&gt;while (1) · HAL_GetTick()&lt;/div&gt;&lt;div style=&quot;font-family:monospace;font-size:15px;font-weight:400;line-height:1.55;color:#34465e&quot;&gt;100 ms · BH1750_ReadLux&lt;/div&gt;&lt;div style=&quot;font-family:monospace;font-size:15px;font-weight:400;line-height:1.55;color:#34465e&quot;&gt;BMP280_ReadData · 측정값 갱신&lt;/div&gt;&lt;div style=&quot;font-family:monospace;font-size:14px;font-weight:400;line-height:1.55;color:#34465e&quot;&gt;압력 변경 시 · TM1637_DisplayDecimal&lt;/div&gt;&lt;div style=&quot;font-family:monospace;font-size:16px;font-weight:400;line-height:1.55;color:#34465e&quot;&gt;500 ms · printf 센서 로그&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6b8ebd;strokeWidth=2.5;shadow=0;align=left;verticalAlign=top;spacingLeft=20;spacingTop=12;" vertex="1" parent="1">
+          <mxGeometry x="80" y="300" width="420" height="390" as="geometry" />
+        </mxCell>
+        <mxCell id="app-data" value="&lt;div style=&quot;font-family:Arial,'Noto Sans KR',sans-serif;font-size:21px;font-weight:700;color:#263b55;margin-bottom:12px&quot;&gt;측정 데이터&lt;/div&gt;&lt;div style=&quot;font-family:monospace;font-size:16px;font-weight:400;line-height:1.55;color:#34465e&quot;&gt;illuminance · temperature&lt;/div&gt;&lt;div style=&quot;font-family:monospace;font-size:16px;font-weight:400;line-height:1.55;color:#34465e&quot;&gt;pressure · altitude&lt;/div&gt;&lt;div style=&quot;font-family:monospace;font-size:14px;font-weight:400;line-height:1.55;color:#34465e&quot;&gt;Application 내부 저장값&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#a9b8cb;strokeWidth=2;shadow=0;align=left;verticalAlign=top;spacingLeft=20;spacingTop=12;" vertex="1" parent="1">
+          <mxGeometry x="80" y="750" width="420" height="135" as="geometry" />
+        </mxCell>
+        <mxCell id="drv-bh" value="&lt;div style=&quot;font-family:Arial,'Noto Sans KR',sans-serif;font-size:21px;font-weight:700;color:#263b55;margin-bottom:12px&quot;&gt;조도 측정&lt;/div&gt;&lt;div style=&quot;font-family:monospace;font-size:16px;font-weight:400;line-height:1.55;color:#34465e&quot;&gt;BH1750_Init · BH1750_ReadLux&lt;/div&gt;&lt;div style=&quot;font-family:monospace;font-size:15px;font-weight:400;line-height:1.55;color:#34465e&quot;&gt;초기화 대기 · HAL_Delay(10 ms)&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#a9b8cb;strokeWidth=2;shadow=0;align=left;verticalAlign=top;spacingLeft=20;spacingTop=12;" vertex="1" parent="1">
+          <mxGeometry x="750" y="320" width="400" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="drv-bmp" value="&lt;div style=&quot;font-family:Arial,'Noto Sans KR',sans-serif;font-size:21px;font-weight:700;color:#263b55;margin-bottom:12px&quot;&gt;온도 · 기압 · 고도&lt;/div&gt;&lt;div style=&quot;font-family:monospace;font-size:15px;font-weight:400;line-height:1.55;color:#34465e&quot;&gt;BMP280_Init · BMP280_ReadData&lt;/div&gt;&lt;div style=&quot;font-family:monospace;font-size:14px;font-weight:400;line-height:1.55;color:#34465e&quot;&gt;BMP280_GetSeaLevelPressure&lt;/div&gt;&lt;div style=&quot;font-family:monospace;font-size:15px;font-weight:400;line-height:1.55;color:#34465e&quot;&gt;init: HAL_Delay(10 ms)&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#a9b8cb;strokeWidth=2;shadow=0;align=left;verticalAlign=top;spacingLeft=20;spacingTop=12;" vertex="1" parent="1">
+          <mxGeometry x="750" y="480" width="400" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="drv-tm" value="&lt;div style=&quot;font-family:Arial,'Noto Sans KR',sans-serif;font-size:21px;font-weight:700;color:#263b55;margin-bottom:12px&quot;&gt;7세그먼트 표시&lt;/div&gt;&lt;div style=&quot;font-family:monospace;font-size:14px;font-weight:400;line-height:1.55;color:#34465e&quot;&gt;TM1637_Init · TM1637_DisplayDecimal&lt;/div&gt;&lt;div style=&quot;font-family:monospace;font-size:14px;font-weight:400;line-height:1.55;color:#34465e&quot;&gt;TM1637_DisplayString · 비트뱅잉&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#a9b8cb;strokeWidth=2;shadow=0;align=left;verticalAlign=top;spacingLeft=20;spacingTop=12;" vertex="1" parent="1">
+          <mxGeometry x="750" y="670" width="400" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="hal-config" value="&lt;div style=&quot;font-family:Arial,'Noto Sans KR',sans-serif;font-size:21px;font-weight:700;color:#263b55;margin-bottom:12px&quot;&gt;보드 · 주변장치 초기화&lt;/div&gt;&lt;div style=&quot;font-family:monospace;font-size:15px;font-weight:400;line-height:1.55;color:#34465e&quot;&gt;HAL_Init · HAL_RCC_* · HAL_Delay&lt;/div&gt;&lt;div style=&quot;font-family:monospace;font-size:15px;font-weight:400;line-height:1.55;color:#34465e&quot;&gt;HAL_*_Init · HAL_MspInit&lt;/div&gt;&lt;div style=&quot;font-family:monospace;font-size:15px;font-weight:400;line-height:1.55;color:#34465e&quot;&gt;HAL_*_MspInit · clock / GPIO&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#a9b8cb;strokeWidth=2;shadow=0;align=left;verticalAlign=top;spacingLeft=20;spacingTop=12;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="190" width="410" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="hal-i2c" value="&lt;div style=&quot;font-family:Arial,'Noto Sans KR',sans-serif;font-size:21px;font-weight:700;color:#263b55;margin-bottom:12px&quot;&gt;I2C 서비스&lt;/div&gt;&lt;div style=&quot;font-family:monospace;font-size:15px;font-weight:400;line-height:1.55;color:#34465e&quot;&gt;HAL_I2C_IsDeviceReady&lt;/div&gt;&lt;div style=&quot;font-family:monospace;font-size:14px;font-weight:400;line-height:1.55;color:#34465e&quot;&gt;HAL_I2C_Master_Transmit / Receive&lt;/div&gt;&lt;div style=&quot;font-family:monospace;font-size:14px;font-weight:400;line-height:1.55;color:#34465e&quot;&gt;I2C1 · 100 kHz&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#a9b8cb;strokeWidth=2;shadow=0;align=left;verticalAlign=top;spacingLeft=20;spacingTop=12;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="320" width="410" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="hal-spi" value="&lt;div style=&quot;font-family:Arial,'Noto Sans KR',sans-serif;font-size:21px;font-weight:700;color:#263b55;margin-bottom:12px&quot;&gt;SPI 서비스&lt;/div&gt;&lt;div style=&quot;font-family:monospace;font-size:15px;font-weight:400;line-height:1.55;color:#34465e&quot;&gt;HAL_SPI_Transmit / Receive&lt;/div&gt;&lt;div style=&quot;font-family:monospace;font-size:14px;font-weight:400;line-height:1.55;color:#34465e&quot;&gt;SPI1 · Mode 3 · 8 MHz&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#a9b8cb;strokeWidth=2;shadow=0;align=left;verticalAlign=top;spacingLeft=20;spacingTop=12;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="490" width="410" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="hal-gpio" value="&lt;div style=&quot;font-family:Arial,'Noto Sans KR',sans-serif;font-size:21px;font-weight:700;color:#263b55;margin-bottom:12px&quot;&gt;GPIO 서비스&lt;/div&gt;&lt;div style=&quot;font-family:monospace;font-size:15px;font-weight:400;line-height:1.55;color:#34465e&quot;&gt;HAL_GPIO_WritePin / ReadPin&lt;/div&gt;&lt;div style=&quot;font-family:monospace;font-size:14px;font-weight:400;line-height:1.55;color:#34465e&quot;&gt;BMP280 CS · TM1637 CLK / DIO&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#a9b8cb;strokeWidth=2;shadow=0;align=left;verticalAlign=top;spacingLeft=20;spacingTop=12;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="670" width="410" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="hal-uart" value="&lt;div style=&quot;font-family:Arial,'Noto Sans KR',sans-serif;font-size:21px;font-weight:700;color:#263b55;margin-bottom:12px&quot;&gt;UART 출력&lt;/div&gt;&lt;div style=&quot;font-family:monospace;font-size:14px;font-weight:400;line-height:1.55;color:#34465e&quot;&gt;HAL_UART_Transmit · USART2 115200&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#a9b8cb;strokeWidth=2;shadow=0;align=left;verticalAlign=top;spacingLeft=20;spacingTop=12;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="820" width="410" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="hal-time" value="&lt;div style=&quot;font-family:Arial,'Noto Sans KR',sans-serif;font-size:21px;font-weight:700;color:#263b55;margin-bottom:12px&quot;&gt;시스템 시간 기반&lt;/div&gt;&lt;div style=&quot;font-family:monospace;font-size:14px;font-weight:400;line-height:1.55;color:#34465e&quot;&gt;HAL_GetTick() · 1 ms 시간값 조회&lt;/div&gt;&lt;div style=&quot;font-family:monospace;font-size:13px;font-weight:400;line-height:1.55;color:#34465e&quot;&gt;SysTick_Handler · HAL_IncTick() IRQ 갱신&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#a9b8cb;strokeWidth=2;shadow=0;align=left;verticalAlign=top;spacingLeft=20;spacingTop=12;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="900" width="410" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="uart-label" value="printf → _write → __io_putchar" style="text;html=1;align=left;verticalAlign=middle;fontFamily=Noto Sans KR;fontSize=15;fontColor=#40536f;" vertex="1" parent="1">
+          <mxGeometry x="790" y="827" width="440" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="cs-label" value="CS 제어" style="text;html=1;align=left;verticalAlign=middle;fontFamily=Noto Sans KR;fontSize=15;fontColor=#40536f;" vertex="1" parent="1">
+          <mxGeometry x="1268" y="669" width="95" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-arrow" value="호출 / 사용" style="text;html=1;align=left;verticalAlign=middle;fontFamily=Noto Sans KR;fontSize=15;fontColor=#40536f;" vertex="1" parent="1">
+          <mxGeometry x="140" y="1017" width="120" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-groups" value="그룹 · 기능 블록" style="text;html=1;align=left;verticalAlign=middle;fontFamily=Noto Sans KR;fontSize=15;fontColor=#40536f;" vertex="1" parent="1">
+          <mxGeometry x="310" y="1017" width="230" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-time" value="HAL_GetTick은 시간값 조회 · SysTick IRQ는 tick 갱신" style="text;html=1;align=left;verticalAlign=middle;fontFamily=Noto Sans KR;fontSize=15;fontColor=#40536f;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="1017" width="810" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-line" value="" style="edgeStyle=none;html=1;strokeColor=#40536f;strokeWidth=2;endArrow=block;endFill=1;" parent="1" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="70" y="1030" as="sourcePoint" />
+            <mxPoint x="125" y="1030" as="targetPoint" />
+          </mxGeometry>
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-group-swatch" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F4F7FB;strokeColor=#D7E0EC;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="285" y="1021" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-node-swatch" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#A9B8CB;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="400" y="1021" width="20" height="20" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

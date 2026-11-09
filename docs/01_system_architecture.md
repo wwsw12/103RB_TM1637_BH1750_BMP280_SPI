@@ -1,6 +1,6 @@
 # 01. 시스템 아키텍처
 
-> 파일: [main.c](../Core/Src/main.c), [bh1750.c](../Core/Src/bh1750.c), [bmp280.c](../Core/Src/bmp280.c), [tm1637.c](../Core/Src/tm1637.c), [.ioc](../p116.103RB_TM1637_BH1750_BMP280_SPI.ioc)
+> 파일: [main.c](../Core/Src/main.c), [bh1750.c](../Core/Src/bh1750.c), [bmp280.c](../Core/Src/bmp280.c), [tm1637.c](../Core/Src/tm1637.c), [stm32f1xx_hal_msp.c](../Core/Src/stm32f1xx_hal_msp.c), [stm32f1xx_it.c](../Core/Src/stm32f1xx_it.c), [syscalls.c](../Core/Src/syscalls.c), [.ioc](../p116.103RB_TM1637_BH1750_BMP280_SPI.ioc)
 
 ## 1. 시스템 구성 요소
 
@@ -14,9 +14,9 @@
 
 ## 2. 전체 구조
 
-![Application, 사용자 드라이버, ST HAL의 연결 관계](images/system_architecture.svg)
+![Application, 사용자 드라이버, STM32 HAL의 소프트웨어 아키텍처](images/system_architecture.png)
 
-그림은 [편집 가능한 SVG 원본](images/system_architecture.svg)입니다. 각 상자와 직선 화살표의 좌표를 SVG 편집기 또는 텍스트 편집기에서 수정할 수 있습니다.
+편집 가능한 [draw.io 원본](images/system_architecture.drawio)과 [SVG](images/system_architecture.svg), [고해상도 PNG](images/system_architecture.png)를 제공합니다. 화살표는 호출·사용 관계를 나타내며, 측정 데이터는 Application 내부 저장 영역으로 구분했습니다. `HAL_GetTick()`은 1 ms 시간값을 읽고, 별도의 `SysTick_Handler`가 `HAL_IncTick()`으로 시간을 갱신합니다.
 
 ## 3. 실제 동작 순서
 

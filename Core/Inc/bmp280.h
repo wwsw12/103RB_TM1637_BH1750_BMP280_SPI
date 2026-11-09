@@ -4,7 +4,7 @@
  * @brief   BMP280 기압/온도 센서 SPI1 드라이버 헤더 파일
  *          타겟 MCU   : STM32F103RBT6
  *          인터페이스 : SPI1 (PA4=CS, PA5=SCK, PA6=MISO, PA7=MOSI)
- *          SPI 규격   : Mode 0 (CPOL=0, CPHA=0), MSB First, 4-Wire Full-Duplex
+ *          SPI 규격   : Mode 3 (CPOL=1, CPHA=1), MSB First, 4-Wire Full-Duplex
  ******************************************************************************
  */
 
