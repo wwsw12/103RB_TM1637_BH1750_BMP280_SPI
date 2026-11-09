@@ -15,7 +15,7 @@
 ## 2. 전체 구조
 
 ```mermaid
-flowchart TB
+flowchart LR
     subgraph APP["Application (main.c USER CODE)"]
         LOOP["while(1) 스케줄러<br/>HAL_GetTick() 기반"]
         VARS["static float<br/>illuminance / temperature<br/>pressure / altitude"]
