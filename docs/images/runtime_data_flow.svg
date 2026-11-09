@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080" role="img" aria-labelledby="title description">
+  <title id="title">런타임 데이터 흐름</title>
+  <desc id="description">HAL_GetTick 기반 100ms 센싱과 조건부 표시, 500ms UART 출력 및 Application 측정 데이터의 갱신</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="10" markerHeight="10" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#40536f"/>
+    </marker>
+    <style>
+      .group { fill:#f4f7fb;stroke:#d7e0ec;stroke-width:2 }
+      .node { fill:#fff;stroke:#a9b8cb;stroke-width:2 }
+      .accent { fill:#fff;stroke:#6b8ebd;stroke-width:2.5 }
+      .title { fill:#20334d;font:700 30px 'Noto Sans KR','Malgun Gothic',sans-serif }
+      .subtitle { fill:#61728a;font:16px 'Noto Sans KR','Malgun Gothic',sans-serif }
+      .group-title { fill:#263b55;font:700 19px 'Noto Sans KR','Malgun Gothic',sans-serif;letter-spacing:1px }
+      .role { fill:#263b55;font:700 19px 'Noto Sans KR','Malgun Gothic',sans-serif }
+      .body { fill:#34465e;font:16px 'Noto Sans KR','Malgun Gothic',sans-serif }
+      .mono { fill:#34465e;font:14px 'DejaVu Sans Mono',Consolas,monospace }
+      .small { fill:#61728a;font:14px 'Noto Sans KR','Malgun Gothic',sans-serif }
+      .edge { fill:none;stroke:#40536f;stroke-width:2.5;stroke-linecap:square;stroke-linejoin:miter;marker-end:url(#arrow) }
+      .data { fill:none;stroke:#6b8ebd;stroke-width:2.2;stroke-dasharray:8 7;stroke-linecap:square;stroke-linejoin:miter;marker-end:url(#data-arrow) }
+      .rule { stroke:#e2e8f0;stroke-width:1.5 }
+    </style>
+    <marker id="data-arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="9" markerHeight="9" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#6b8ebd"/>
+    </marker>
+  </defs>
+  <rect width="1920" height="1080" fill="#fff"/>
+  <text class="title" x="60" y="58">런타임 데이터 흐름</text>
+  <text class="subtitle" x="60" y="88">main.c superloop · 주기 조건은 HAL_GetTick()의 경과 시간으로 판정</text>
+  <text class="subtitle" x="1860" y="58" text-anchor="end">1 ms tick · 16:9</text>
+
+  <rect class="group" x="50" y="135" width="470" height="770" rx="12"/>
+  <text class="group-title" x="80" y="176">APPLICATION</text>
+  <rect class="group" x="650" y="135" width="560" height="770" rx="12"/>
+  <text class="group-title" x="680" y="176">USER DRIVERS / DATA</text>
+  <rect class="group" x="1340" y="135" width="530" height="900" rx="12"/>
+  <text class="group-title" x="1370" y="176">STM32 HAL / OUTPUT</text>
+
+  <g aria-label="Call relationships">
+    <path class="edge" d="M 470 280 H 820"/>
+    <path class="edge" d="M 470 400 H 820"/>
+    <path class="edge" d="M 470 600 H 560 V 755 H 820"/>
+    <path class="edge" d="M 470 630 H 610 V 855 H 1410"/>
+    <path class="edge" d="M 470 660 H 560 V 950 H 1410"/>
+    <path class="edge" d="M 1090 280 H 1410"/>
+    <path class="edge" d="M 1090 400 H 1410"/>
+    <path class="edge" d="M 1090 450 H 1260 V 575 H 1410"/>
+    <path class="edge" d="M 1190 755 H 1300 V 610 H 1410"/>
+  </g>
+  <g aria-label="Data updates">
+    <path class="data" d="M 950 330 H 700 V 560 H 745"/>
+    <path class="data" d="M 950 480 H 670 V 610 H 745"/>
+    <path class="data" d="M 1015 645 V 700"/>
+  </g>
+
+  <g aria-label="Application scheduler and measurements">
+    <rect class="accent" x="100" y="220" width="370" height="490" rx="8"/>
+    <text class="role" x="125" y="258">주기 스케줄러</text>
+    <text class="mono" x="125" y="291">while (1) · HAL_GetTick()</text>
+    <line class="rule" x1="125" y1="311" x2="445" y2="311"/>
+    <text class="body" x="125" y="347">100 ms · 센싱</text>
+    <text class="mono" x="125" y="377">BH1750_ReadLux()</text>
+    <text class="mono" x="125" y="407">BMP280_ReadData()</text>
+    <text class="small" x="125" y="436">BMP 성공 + pressure 반올림 변경 시</text>
+    <text class="mono" x="125" y="465">TM1637_DisplayDecimal()</text>
+    <line class="rule" x1="125" y1="485" x2="445" y2="485"/>
+    <text class="body" x="125" y="521">500 ms · UART 로그</text>
+    <text class="mono" x="125" y="551">printf("[ALL SENSORS] ...")</text>
+    <text class="small" x="125" y="581">센서 통신 없이 캐시 값 사용</text>
+
+    <rect class="node" x="100" y="755" width="370" height="120" rx="8"/>
+    <text class="role" x="125" y="795">Application 측정 데이터</text>
+    <text class="mono" x="125" y="829">illuminance · temperature</text>
+    <text class="mono" x="125" y="855">pressure · altitude</text>
+  </g>
+
+  <g aria-label="Drivers">
+    <rect class="node" x="820" y="230" width="270" height="100" rx="8"/>
+    <text class="role" x="842" y="269">조도 측정</text>
+    <text class="mono" x="842" y="301">BH1750_ReadLux()</text>
+
+    <rect class="node" x="820" y="350" width="270" height="130" rx="8"/>
+    <text class="role" x="842" y="389">온도 · 기압 · 고도</text>
+    <text class="mono" x="842" y="421">BMP280_ReadData()</text>
+    <text class="small" x="842" y="451">성공 시 출력 인자 갱신</text>
+
+    <rect class="node" x="820" y="700" width="370" height="110" rx="8"/>
+    <text class="role" x="845" y="740">기압 표시 갱신</text>
+    <text class="mono" x="845" y="774">TM1637_DisplayDecimal(press_int)</text>
+    <text class="small" x="845" y="798">정수 반올림 값이 바뀐 경우에만 호출</text>
+  </g>
+
+  <g aria-label="Measured data">
+    <rect class="accent" x="745" y="535" width="445" height="110" rx="8"/>
+    <text class="role" x="770" y="574">측정 데이터 갱신</text>
+    <text class="mono" x="770" y="608">illuminance · temperature · pressure · altitude</text>
+    <text class="small" x="770" y="632">드라이버 출력 인자로 Application 변수에 기록</text>
+  </g>
+
+  <g aria-label="HAL and output services">
+    <rect class="node" x="1410" y="230" width="410" height="100" rx="8"/>
+    <text class="role" x="1435" y="269">I2C 서비스</text>
+    <text class="mono" x="1435" y="301">HAL_I2C_Master_Receive()</text>
+    <text class="small" x="1785" y="322" text-anchor="end">조도 원시값 2 byte</text>
+
+    <rect class="node" x="1410" y="350" width="410" height="130" rx="8"/>
+    <text class="role" x="1435" y="389">SPI 서비스</text>
+    <text class="mono" x="1435" y="421">HAL_SPI_Transmit / Receive</text>
+    <text class="small" x="1435" y="451">CS Low → 0xF7 read → 6 byte → CS High</text>
+
+    <rect class="node" x="1410" y="520" width="410" height="130" rx="8"/>
+    <text class="role" x="1435" y="559">GPIO 서비스</text>
+    <text class="mono" x="1435" y="591">HAL_GPIO_WritePin / ReadPin</text>
+    <text class="small" x="1435" y="621">BMP280 CS · TM1637 CLK / DIO</text>
+
+    <rect class="node" x="1410" y="800" width="410" height="110" rx="8"/>
+    <text class="role" x="1435" y="840">UART 전송</text>
+    <text class="mono" x="1435" y="874">printf → _write → __io_putchar</text>
+    <text class="small" x="1435" y="898">HAL_UART_Transmit · USART2</text>
+
+    <rect class="node" x="1410" y="925" width="410" height="105" rx="8"/>
+    <text class="role" x="1435" y="965">시스템 시간</text>
+    <text class="mono" x="1435" y="999">HAL_GetTick() · 1 ms 시간값 조회</text>
+    <text class="small" x="1435" y="1023">SysTick_Handler → HAL_IncTick()</text>
+  </g>
+
+  <g aria-label="Legend">
+    <path class="edge" d="M 75 955 H 130"/>
+    <text class="body" x="145" y="961">호출 / 사용</text>
+    <path class="data" d="M 310 955 H 365"/>
+    <text class="body" x="380" y="961">데이터 갱신 / 전달</text>
+    <text class="small" x="1320" y="1060">BMP 읽기 실패 시 이전 측정값 유지 · 압력 반올림 값이 바뀔 때만 표시기 갱신</text>
+  </g>
+  <text class="small" x="1270" y="550">BMP280 CS</text>
+  <text class="small" x="1210" y="600">TM1637 비트뱅잉</text>
+</svg>

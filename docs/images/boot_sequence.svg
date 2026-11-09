@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080" role="img" aria-labelledby="title description">
+  <title id="title">부팅 시퀀스</title>
+  <desc id="description">HAL 및 주변장치를 초기화하고 표시기를 시험한 다음 BH1750과 BMP280을 순차 초기화하고 결과를 표시한 뒤 주 루프에 진입</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="10" markerHeight="10" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#40536f"/>
+    </marker>
+    <style>
+      .group { fill:#f4f7fb;stroke:#d7e0ec;stroke-width:2 }
+      .node { fill:#fff;stroke:#a9b8cb;stroke-width:2 }
+      .accent { fill:#fff;stroke:#6b8ebd;stroke-width:2.5 }
+      .title { fill:#20334d;font:700 30px 'Noto Sans KR','Malgun Gothic',sans-serif }
+      .subtitle { fill:#61728a;font:16px 'Noto Sans KR','Malgun Gothic',sans-serif }
+      .group-title { fill:#263b55;font:700 19px 'Noto Sans KR','Malgun Gothic',sans-serif;letter-spacing:1px }
+      .role { fill:#263b55;font:700 20px 'Noto Sans KR','Malgun Gothic',sans-serif }
+      .body { fill:#34465e;font:16px 'Noto Sans KR','Malgun Gothic',sans-serif }
+      .mono { fill:#34465e;font:15px 'DejaVu Sans Mono',Consolas,monospace }
+      .small { fill:#61728a;font:14px 'Noto Sans KR','Malgun Gothic',sans-serif }
+      .edge { fill:none;stroke:#40536f;stroke-width:2.5;stroke-linecap:square;stroke-linejoin:miter;marker-end:url(#arrow) }
+      .branch { fill:#fff;stroke:#6b8ebd;stroke-width:2 }
+    </style>
+  </defs>
+  <rect width="1920" height="1080" fill="#fff"/>
+  <text class="title" x="60" y="58">부팅 시퀀스</text>
+  <text class="subtitle" x="60" y="88">main() · 초기화는 순차 실행 · 센서 초기화 실패 후에도 메인 루프에 진입</text>
+  <text class="subtitle" x="1860" y="58" text-anchor="end">STM32F103RBT6 · 16:9</text>
+
+  <rect class="group" x="50" y="140" width="430" height="700" rx="12"/>
+  <text class="group-title" x="78" y="181">01 · MCU / PERIPHERALS</text>
+  <rect class="group" x="530" y="140" width="390" height="700" rx="12"/>
+  <text class="group-title" x="558" y="181">02 · DISPLAY CHECK</text>
+  <rect class="group" x="970" y="140" width="500" height="700" rx="12"/>
+  <text class="group-title" x="998" y="181">03 · SENSOR INIT</text>
+  <rect class="group" x="1520" y="140" width="350" height="740" rx="12"/>
+  <text class="group-title" x="1548" y="181">04 · RESULT</text>
+
+  <g aria-label="Flow">
+    <path class="edge" d="M 260 405 V 475"/>
+    <path class="edge" d="M 420 555 H 500 V 340 H 570"/>
+    <path class="edge" d="M 720 410 V 490"/>
+    <path class="edge" d="M 870 562 H 945 V 325 H 1020"/>
+    <path class="edge" d="M 1220 400 V 470"/>
+    <path class="edge" d="M 1270 610 V 655"/>
+    <path class="edge" d="M 1420 715 H 1570"/>
+    <path class="edge" d="M 1270 775 V 814 H 1570"/>
+  </g>
+
+  <g aria-label="MCU and peripherals">
+    <rect class="accent" x="100" y="260" width="320" height="145" rx="8"/>
+    <text class="role" x="125" y="299">HAL / 시스템 초기화</text>
+    <text class="mono" x="125" y="334">HAL_Init()</text>
+    <text class="mono" x="125" y="362">SystemClock_Config()</text>
+    <text class="small" x="125" y="389">HSI / 2 × 16 · 64 MHz</text>
+
+    <rect class="node" x="100" y="475" width="320" height="160" rx="8"/>
+    <text class="role" x="125" y="514">주변장치 초기화</text>
+    <text class="mono" x="125" y="548">MX_GPIO_Init()</text>
+    <text class="mono" x="125" y="576">MX_USART2_UART_Init()</text>
+    <text class="mono" x="125" y="604">MX_I2C1_Init() · MX_SPI1_Init()</text>
+    <text class="small" x="125" y="625">MSP에서 clock · peripheral pin 설정</text>
+  </g>
+
+  <g aria-label="Display check">
+    <rect class="node" x="570" y="270" width="300" height="140" rx="8"/>
+    <text class="role" x="595" y="309">부팅 로그</text>
+    <text class="mono" x="595" y="345">printf() → USART2</text>
+    <text class="small" x="595" y="378">초기화 및 인터페이스 배너</text>
+
+    <rect class="node" x="570" y="490" width="300" height="145" rx="8"/>
+    <text class="role" x="595" y="529">표시기 시험</text>
+    <text class="mono" x="595" y="565">TM1637_Init()</text>
+    <text class="mono" x="595" y="593">DisplayString("TEST")</text>
+    <text class="small" x="595" y="619">HAL_Delay(300 ms)</text>
+  </g>
+
+  <g aria-label="Sensor initialization">
+    <rect class="node" x="1020" y="250" width="400" height="150" rx="8"/>
+    <text class="role" x="1045" y="289">조도 센서 초기화</text>
+    <text class="mono" x="1045" y="325">BH1750_Init(&amp;hi2c1)</text>
+    <text class="small" x="1045" y="354">Ready 확인 · Power On · 연속 측정 모드</text>
+    <text class="small" x="1045" y="379">초기 안정화 HAL_Delay(10 ms)</text>
+
+    <rect class="node" x="1020" y="470" width="400" height="140" rx="8"/>
+    <text class="role" x="1045" y="509">기압 센서 초기화</text>
+    <text class="mono" x="1045" y="545">BMP280_Init(&amp;hspi1)</text>
+    <text class="small" x="1045" y="574">Chip ID · reset · calibration · config</text>
+    <text class="small" x="1045" y="597">성공 시 QNH 조회 · 초기화 결과를 UART 출력</text>
+
+    <polygon class="branch" points="1270,655 1420,715 1270,775 1120,715"/>
+    <text class="body" x="1270" y="710" text-anchor="middle">BH1750_init_ok</text>
+    <text class="body" x="1270" y="733" text-anchor="middle">&amp;&amp; BMP280_init_ok?</text>
+  </g>
+
+  <g aria-label="Result">
+    <rect class="node" x="1570" y="640" width="300" height="98" rx="8"/>
+    <text class="role" x="1595" y="680">초기화 성공</text>
+    <text class="mono" x="1595" y="712">TM1637_DisplayString("GOOD")</text>
+    <text class="small" x="1570" y="620">Yes</text>
+
+    <rect class="node" x="1570" y="760" width="300" height="108" rx="8"/>
+    <text class="role" x="1595" y="800">초기화 실패</text>
+    <text class="mono" x="1595" y="831">TM1637_DisplayString("ERR ")</text>
+    <text class="small" x="1460" y="800">No</text>
+  </g>
+
+  <rect class="group" x="50" y="925" width="1820" height="95" rx="10"/>
+  <text class="role" x="80" y="964">공통 후속 단계</text>
+  <text class="body" x="285" y="964">GOOD / ERR 표시 후 HAL_Delay(300 ms) → lastUartTick · lastSenseTick = 0 초기화 → while (1)</text>
+  <text class="small" x="80" y="994">센서 초기화 실패는 Error_Handler()로 중단하지 않으며, 초기화 결과를 로그·표시기로 알린 뒤 실행을 계속합니다.</text>
+</svg>

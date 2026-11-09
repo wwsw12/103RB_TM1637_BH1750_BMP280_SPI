@@ -22,54 +22,25 @@
 
 ### 3-1. 부팅 시퀀스 (`main()`)
 
-```mermaid
-flowchart TD
-    A["HAL_Init()"] --> B["SystemClock_Config()<br/>HSI/2 × 16 = 64 MHz"]
-    B --> C["MX_GPIO_Init → MX_USART2_UART_Init<br/>→ MX_I2C1_Init → MX_SPI1_Init"]
-    C --> D["printf 배너 출력"]
-    D --> E["TM1637_Init + DisplayString('TEST') + 300 ms"]
-    E --> F["BH1750_Init(&hi2c1)"]
-    F --> G["BMP280_Init(&hspi1)"]
-    G --> H{"둘 다 HAL_OK?"}
-    H -- 예 --> I["TM1637 'GOOD'"]
-    H -- 아니오 --> J["TM1637 'ERR '"]
-    I & J --> K["300 ms 후 메인 루프 진입"]
-```
+![main() 부팅 및 초기화 시퀀스](images/boot_sequence.png)
+
+[편집 가능한 SVG 원본](images/boot_sequence.svg) · [고해상도 PNG](images/boot_sequence.png)
 
 > 센서 초기화 실패 시에도 루프는 계속 진행됩니다 (`Error_Handler` 호출 없음). 실패는 UART 메시지와 `ERR ` 표시로만 알립니다.
 
 ### 3-2. 런타임 데이터 흐름
 
-```mermaid
-sequenceDiagram
-    participant L as main loop
-    participant B as BH1750 (I2C1)
-    participant P as BMP280 (SPI1)
-    participant T as TM1637 (GPIO)
-    participant U as PC (USART2)
-    loop 매 루프
-        alt tick - lastSense ≥ 100 ms
-            L->>B: BH1750_ReadLux → 2 byte 수신
-            B-->>L: illuminance = raw / 1.2
-            L->>P: BMP280_ReadData → CS Low, 0xF7|0x80, 6 byte
-            P-->>L: temperature, pressure, altitude
-            opt (int)(pressure+0.5) 변경
-                L->>T: TM1637_DisplayDecimal(press_int)
-            end
-        end
-        alt tick - lastUart ≥ 500 ms
-            L->>U: printf("[ALL SENSORS] ...")
-        end
-    end
-```
+![주기별 런타임 호출과 측정 데이터 갱신](images/runtime_data_flow.png)
 
-| 단계 | 입력 | 처리 | 출력 |
-|---|---|---|---|
-| ① 조도 | I2C 2 byte | `((buf[0]<<8) \| buf[1]) / 1.2f` | `illuminance` [lx] |
-| ② 온도/기압 | SPI 6 byte (0xF7~0xFC) | 20-bit 조합 → 온도 보정(→`t_fine`) → 기압 보정(Pa→hPa) | `temperature` [℃], `pressure` [hPa] |
-| ③ 고도 | `pressure`, 기준 해면기압 | `44330·(1 − (P/P0)^0.1902949)` | `altitude` [m] |
-| ④ 표시 | `pressure` | 반올림 정수 → 변경 시 TM1637 전송 | 4-digit LED |
-| ⑤ 로그 | 캐시된 4개 변수 | `printf` | UART 약 90바이트 줄 |
+[편집 가능한 SVG 원본](images/runtime_data_flow.svg) · [고해상도 PNG](images/runtime_data_flow.png)
+
+| 주기 / 조건 | 호출 및 처리 | 데이터 영향 |
+|---|---|---|
+| 100 ms | `BH1750_ReadLux(&hi2c1, &illuminance)` | I2C 수신 성공 시 조도 갱신. 반환 상태는 `main.c`에서 검사하지 않으므로 실패 시 이전 값 유지 |
+| 100 ms | `BMP280_ReadData(&hspi1, &temperature, &pressure, &altitude)` 성공 시 압력 반올림값 비교 | 성공한 경우 온도·기압·고도 갱신. 반올림 압력이 `lastDisplayedPress`와 다를 때만 `TM1637_DisplayDecimal()` 호출 |
+| 500 ms | `printf("[ALL SENSORS] ...")` → `_write` → `__io_putchar` → `HAL_UART_Transmit` | 센서 통신 없이 Application에 저장된 최신 측정값을 USART2로 출력 |
+
+루프마다 `HAL_GetTick()`을 한 번 읽고, 센싱 조건을 먼저 검사한 다음 UART 출력 조건을 검사합니다. 두 조건이 같은 반복에서 모두 참이면 UART는 해당 반복에서 갱신된 값을 출력합니다. BMP280 읽기가 실패하면 출력 인자는 갱신되지 않아 이전 측정값이 유지됩니다.
 
 ## 4. 소프트웨어 모듈 역할
 
