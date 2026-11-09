@@ -14,34 +14,9 @@
 
 ## 2. 전체 구조
 
-```mermaid
-%%{init: {"flowchart": {"curve": "linear"}}}%%
-flowchart LR
-    subgraph APP["Application (main.c USER CODE)"]
-        LOOP["while(1) 스케줄러<br/>HAL_GetTick() 기반"]
-        VARS["static float<br/>illuminance / temperature<br/>pressure / altitude"]
-    end
-    subgraph DRV["사용자 드라이버"]
-        BH["BH1750_Init / ReadLux"]
-        BM["BMP280_Init / ReadData<br/>(보정식, 고도식)"]
-        TM["TM1637_Init / DisplayDecimal / DisplayString"]
-    end
-    subgraph ST["ST HAL (Drivers/)"]
-        I2C["HAL_I2C_Master_Transmit/Receive<br/>HAL_I2C_IsDeviceReady"]
-        SPI["HAL_SPI_Transmit / Receive"]
-        GPIO["HAL_GPIO_WritePin / ReadPin"]
-        UART["HAL_UART_Transmit"]
-        TICK["HAL_GetTick (SysTick 1 ms)"]
-    end
-    LOOP --> BH & BM & TM
-    LOOP --> VARS
-    BH --> I2C
-    BM --> SPI
-    BM --> GPIO
-    TM --> GPIO
-    LOOP -->|printf → __io_putchar| UART
-    LOOP --> TICK
-```
+![Application, 사용자 드라이버, ST HAL의 연결 관계](images/system_architecture.svg)
+
+그림은 [편집 가능한 SVG 원본](images/system_architecture.svg)입니다. 각 상자와 직선 화살표의 좌표를 SVG 편집기 또는 텍스트 편집기에서 수정할 수 있습니다.
 
 ## 3. 실제 동작 순서
 
