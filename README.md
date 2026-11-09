@@ -29,7 +29,7 @@
 ```mermaid
 flowchart LR
     subgraph MCU["STM32F103RBT6 (Cortex-M3, 64 MHz)"]
-        MAIN["main.c<br/>Super-loop 스케줄러"]
+        MAIN["main.c"]
         BH["bh1750.c"]
         BM["bmp280.c"]
         TM["tm1637.c"]
@@ -45,13 +45,13 @@ flowchart LR
 
 ## 4. 개발 환경 및 사용 기술
 
-| 항목 | 내용 | 근거 |
-|---|---|---|
-| MCU | STM32F103RBT6 (Cortex-M3, Flash 128 KB, RAM 20 KB) | `.ioc` `Mcu.CPN`, `STM32F103RBTX_FLASH.ld` |
-| 클럭 | HSI/2 × PLL16 = **64 MHz**, APB1 32 MHz, APB2 64 MHz | `main.c: SystemClock_Config` |
-| IDE / 툴체인 | STM32CubeIDE, arm-none-eabi-gcc, `-O0 -g3` (Debug), nano.specs, printf float 활성 | `.cproject`, `Debug/Core/Src/subdir.mk` |
-| 펌웨어 패키지 | STM32Cube FW_F1 V1.8.7 (HAL) | `.ioc` `ProjectManager.FirmwarePackage` |
-| 방식 | 베어메탈, 폴링(blocking HAL), 인터럽트·DMA·RTOS **미사용** | `.ioc` NVIC에 주변장치 IRQ 없음 / `main.c` |
+| 항목 | 내용 |
+|---|---|
+| MCU | STM32F103RBT6 (Cortex-M3, Flash 128 KB, RAM 20 KB) |
+| 클럭 | HSI/2 × PLL16 = **64 MHz**, APB1 32 MHz, APB2 64 MHz |
+| IDE / 툴체인 | STM32CubeIDE, arm-none-eabi-gcc, `-O0 -g3` (Debug), nano.specs, printf float 활성 |
+| 펌웨어 패키지 | STM32Cube FW_F1 V1.8.7 (HAL) |
+| 방식 | 베어메탈, 폴링(blocking HAL) |
 
 ## 5. 하드웨어 구성 요약
 
