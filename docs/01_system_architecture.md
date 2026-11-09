@@ -1,6 +1,6 @@
 # 01. 시스템 아키텍처
 
-> 근거 파일: [main.c](../Core/Src/main.c), [bh1750.c](../Core/Src/bh1750.c), [bmp280.c](../Core/Src/bmp280.c), [tm1637.c](../Core/Src/tm1637.c), [.ioc](../p116.103RB_TM1637_BH1750_BMP280_SPI.ioc)
+> 파일: [main.c](../Core/Src/main.c), [bh1750.c](../Core/Src/bh1750.c), [bmp280.c](../Core/Src/bmp280.c), [tm1637.c](../Core/Src/tm1637.c), [.ioc](../p116.103RB_TM1637_BH1750_BMP280_SPI.ioc)
 
 ## 1. 시스템 구성 요소
 
@@ -10,9 +10,7 @@
 | BH1750 | 조도 센서 (16-bit raw → lx) | I2C1 (100 kHz) | 센서 → MCU (측정값), MCU → 센서 (명령) |
 | BMP280 | 기압/온도 센서 | SPI1 (8 MHz, Mode 3) + GPIO CS | 양방향 (레지스터 R/W) |
 | TM1637 | 4-digit 7-segment 구동 IC | GPIO 2선 (CLK/DIO) 비트뱅잉 | MCU → 표시기 (ACK는 표시기 → MCU) |
-| PC 터미널 | 로그 수신 | USART2 TX (PA2) | MCU → PC |
-
-> 코드에는 USART2 **수신(RX) 사용 코드가 없습니다.** (`HAL_UART_Receive` 호출 없음. 모드는 `UART_MODE_TX_RX`로 초기화만 됨)
+| PC 터미널 | 로그 수신 | USART2 TX (PA2) | MCU → PC |    
 
 ## 2. 전체 구조
 
@@ -105,15 +103,3 @@ sequenceDiagram
 | BH1750 드라이버 | `bh1750.c/.h` | `BH1750_Init`, `BH1750_ReadLux` | HAL I2C 위에 구현 |
 | BMP280 드라이버 | `bmp280.c/.h` | `BMP280_Init`, `BMP280_ReadData`, `Set/GetSeaLevelPressure` | 보정계수를 `static`으로 보관 |
 | TM1637 드라이버 | `tm1637.c/.h` | `TM1637_Init/Clear/DisplayRaw/DisplayDecimal/DisplayFloat/DisplayString/SetBrightness/DisplayOn/Off` | 비트뱅잉 |
-| 저수준 설정 | `stm32f1xx_hal_msp.c` | `HAL_*_MspInit` | 클럭 게이팅 + GPIO AF 설정 (CubeMX 생성) |
-
-`main.c`에서 실제 호출되는 TM1637 API는 `Init`, `DisplayString`, `DisplayDecimal` 3개이며, `DisplayFloat`/`SetBrightness`/`DisplayOn/Off`는 정의만 있고 **현재 미사용**입니다. `BMP280_SetSeaLevelPressure`도 호출되지 않습니다 ([05_troubleshooting.md](05_troubleshooting.md) 이슈 1).
-
-## 5. 처리 방식 요약
-
-| 항목 | 사용 여부 |
-|---|---|
-| 인터럽트 | SysTick(1 ms 틱)만 사용. 주변장치 IRQ 미사용 |
-| DMA | 미사용 (`.ioc`에 DMA 설정 없음) |
-| 폴링/Blocking | I2C/SPI/UART 모두 timeout 지정 blocking HAL 함수 |
-| RTOS | 미사용 |
