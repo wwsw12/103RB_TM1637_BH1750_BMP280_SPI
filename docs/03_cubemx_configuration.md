@@ -38,7 +38,8 @@ MX_SPI1_Init()              → HAL_SPI_Init  → HAL_SPI_MspInit  (클럭 + PA5
 | 틱 우선순위 | 15 (최하위) |
 | 우선순위 그룹 | `NVIC_PRIORITYGROUP_4` (4-bit preemption) |
 | 핸들러 | `SysTick_Handler → HAL_IncTick()` |
-`HAL_GetTick()`은 이 틱으로 증가하는 `uwTick`을 읽으며, 메인 루프 스케줄링(100 ms/500 ms)과 모든 HAL timeout의 기준입니다.
+`HAL_GetTick()`은 이 틱으로 증가하는 `uwTick`을 읽으며,
+메인 루프 스케줄링(100 ms/500 ms)과 모든 HAL timeout의 기준입니다.
 
 ## 3. GPIO
 
