@@ -93,13 +93,3 @@ GPIO_InitStruct.Pull = GPIO_PULLUP;
 | Baud | 115200, 8N1, 흐름제어 없음, Oversampling ×16, Mode TX/RX |
 | 핀 | PA2 AF-PP (TX), PA3 Input (RX) |
 | 버스 | APB1 (32 MHz) — `UART_SetConfig`가 USART1만 PCLK2, 그 외는 PCLK1 사용 (`stm32f1xx_hal_uart.c:3735~3742`에서 확인) |
-
-**보레이트 계산 (HAL 매크로 `stm32f1xx_hal_uart.h:866~874`, PCLK1 = 32 MHz 가정)**
-
-```
-DIV       = (32,000,000 × 25) / (4 × 115200) = 1736      (×100 스케일)
-DIVMANT   = 1736 / 100 = 17
-DIVFRAQ   = ((1736 − 1700) × 16 + 50) / 100 = 6
-BRR       = (17 << 4) | 6 = 0x0116
-실제 baud = 32 MHz / (16 × 17.375) ≈ 115,108 bps   (오차 ≈ −0.08 %)
-```
