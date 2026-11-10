@@ -26,22 +26,11 @@
 
 ## 3. 시스템 아키텍처
 
-```mermaid
-flowchart LR
-    subgraph MCU["STM32F103RBT6 (Cortex-M3, 64 MHz)"]
-        MAIN["main.c"]
-        BH["bh1750.c"]
-        BM["bmp280.c"]
-        TM["tm1637.c"]
-        HAL["STM32F1 HAL<br/>I2C / SPI / GPIO / UART"]
-        MAIN --> BH & BM & TM
-        BH & BM & TM --> HAL
-    end
-    HAL -- "I2C1 PB6/PB7" --> S1["BH1750<br/>조도"]
-    HAL -- "SPI1 PA5/6/7 + CS PA4" --> S2["BMP280<br/>기압/온도"]
-    HAL -- "GPIO PB8/PB9" --> D1["TM1637<br/>4-digit 7-seg"]
-    HAL -- "USART2 PA2/PA3" --> PC["PC 터미널<br/>115200 8N1"]
-```
+![Application, 사용자 드라이버, STM32 HAL의 소프트웨어 아키텍처](docs/images/system_architecture.png)
+
+편집 가능한 [draw.io 원본](docs/images/system_architecture.drawio) · [SVG](docs/images/system_architecture.svg) · [고해상도 PNG](docs/images/system_architecture.png)
+
+> 이 그림은 코드의 호출·사용 관계를 나타내는 소프트웨어 구조도입니다. `main()`의 `while (1)`은 `HAL_GetTick()`으로 1 ms 시간값을 조회해 100 ms 센싱과 500 ms UART 출력을 수행합니다. 시간값 조회와 `SysTick_Handler()`의 `HAL_IncTick()` 갱신은 별도 기능이며, 배선 정보는 [하드웨어 구성](docs/02_hardware.md)을 참고하세요.
 
 ## 4. 개발 환경 및 사용 기술
 
