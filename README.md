@@ -26,38 +26,9 @@
 
 ## 3. 시스템 아키텍처
 
-```mermaid
-flowchart LR
-    subgraph APP["Application · main.c"]
-        MAIN["초기화 · super-loop<br/>100 ms 센싱 / 표시 갱신<br/>500 ms printf 출력"]
-        DATA["측정 데이터<br/>illuminance · temperature<br/>pressure · altitude"]
-    end
-    subgraph DRV["사용자 드라이버"]
-        BH["조도 측정<br/>BH1750_Init · BH1750_ReadLux"]
-        BMP["환경 측정<br/>BMP280_Init · BMP280_ReadData"]
-        TM["7세그먼트 표시<br/>TM1637_Init · TM1637_DisplayDecimal"]
-    end
-    subgraph HAL["STM32 HAL"]
-        INIT["HAL / RCC / MSP 초기화"]
-        I2C["I2C · HAL_I2C_*"]
-        SPI["SPI · HAL_SPI_* (Mode 3, 8 MHz)"]
-        GPIO["GPIO · CS / TM1637 비트뱅잉"]
-        UART["UART · HAL_UART_Transmit"]
-        TICK["HAL_GetTick · 1 ms<br/>SysTick_Handler · HAL_IncTick"]
-    end
-    MAIN --> INIT
-    MAIN --> BH
-    MAIN --> BMP
-    MAIN --> TM
-    BH --> I2C
-    BMP --> SPI
-    BMP -->|CS 제어| GPIO
-    TM -->|GPIO 비트뱅잉| GPIO
-    MAIN -->|printf → _write → __io_putchar| UART
-    MAIN --> TICK
-```
+![STM32 기반 환경 모니터링 시스템 아키텍처](docs/images/system-architecture.svg)
 
-> 화살표는 호출·사용 관계입니다. 측정 데이터는 Application 내부에 저장되며, `HAL_GetTick()`의 시간값 조회와 `SysTick_Handler()`의 tick 갱신은 별도 기능입니다.
+> 화살표는 주요 데이터 흐름을 나타냅니다. 측정값은 STM32F103RB에서 수집·계산되어 TM1637 7세그먼트와 PC 시리얼 로그로 전달됩니다.
 
 ## 4. 개발 환경 및 사용 기술
 

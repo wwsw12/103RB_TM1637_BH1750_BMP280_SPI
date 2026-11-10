@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2000" height="1064" viewBox="0 0 2000 1064" role="img" aria-labelledby="title desc">
+  <title id="title">시스템 아키텍처</title>
+  <desc id="desc">BH1750 조도 센서와 BMP280 온도·기압 센서가 STM32F103RB로 데이터를 보내고, MCU가 TM1637 표시기와 UART를 통해 PC로 측정 결과를 출력하는 구조.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#526b8b"/>
+    </marker>
+    <style>
+      text { font-family: Arial, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; fill: #263f62; }
+      .panel { fill: #f3f6fb; stroke: #c3d5ed; stroke-width: 1.2; }
+      .card { fill: #fff; stroke: #c3d5ed; stroke-width: 1.2; }
+      .flow { fill: none; stroke: #526b8b; stroke-width: 2.4; marker-end: url(#arrow); }
+      .muted { fill: #687f9e; }
+    </style>
+  </defs>
+  <rect width="2000" height="1064" fill="#fff"/>
+  <text x="90" y="112" font-size="48" font-weight="700">시스템 아키텍처</text>
+  <text x="90" y="164" font-size="28" class="muted">STM32 기반 환경 모니터링 시스템</text>
+
+  <rect class="panel" x="82" y="232" width="437" height="662" rx="12"/>
+  <rect class="panel" x="782" y="232" width="437" height="662" rx="12"/>
+  <rect class="panel" x="1482" y="232" width="437" height="662" rx="12"/>
+  <text x="300.5" y="292" text-anchor="middle" font-size="30" font-weight="700">센서 입력</text>
+  <text x="1000.5" y="292" text-anchor="middle" font-size="30" font-weight="700">측정 · 제어</text>
+  <text x="1700.5" y="292" text-anchor="middle" font-size="30" font-weight="700">표시 · 모니터링</text>
+
+  <path class="flow" d="M488 459 H650 V513 H812"/>
+  <path class="flow" d="M488 735 H650 V688 H812"/>
+  <path class="flow" d="M1188 513 H1350 V459 H1512"/>
+  <path class="flow" d="M1188 688 H1350 V735 H1512"/>
+  <text x="650" y="434" text-anchor="middle" font-size="28" font-weight="700">I2C</text>
+  <text x="650" y="810" text-anchor="middle" font-size="28" font-weight="700">SPI</text>
+  <text x="1350" y="434" text-anchor="middle" font-size="28" font-weight="700">GPIO</text>
+  <text x="1350" y="810" text-anchor="middle" font-size="28" font-weight="700">UART</text>
+
+  <rect class="card" x="112" y="375" width="376" height="169" rx="12"/>
+  <rect class="card" x="112" y="651" width="376" height="169" rx="12"/>
+  <text x="300" y="447" text-anchor="middle" font-size="38" font-weight="700">BH1750</text>
+  <text x="300" y="505" text-anchor="middle" font-size="28" class="muted">조도 측정</text>
+  <text x="300" y="723" text-anchor="middle" font-size="38" font-weight="700">BMP280</text>
+  <text x="300" y="781" text-anchor="middle" font-size="28" class="muted">온도 · 기압 측정</text>
+
+  <rect class="card" x="812" y="413" width="376" height="376" rx="12"/>
+  <text x="1000" y="493" text-anchor="middle" font-size="38" font-weight="700">STM32F103RB</text>
+  <text x="1000" y="552" text-anchor="middle" font-size="28">센서 데이터 수집</text>
+  <text x="1000" y="600" text-anchor="middle" font-size="28">고도 계산 · 표시 제어</text>
+  <text x="1000" y="698" text-anchor="middle" font-size="25" class="muted">센싱 / 표시 100 ms</text>
+  <text x="1000" y="742" text-anchor="middle" font-size="25" class="muted">로그 출력 500 ms</text>
+
+  <rect class="card" x="1512" y="375" width="376" height="169" rx="12"/>
+  <rect class="card" x="1512" y="651" width="376" height="169" rx="12"/>
+  <text x="1700" y="447" text-anchor="middle" font-size="38" font-weight="700">TM1637</text>
+  <text x="1700" y="505" text-anchor="middle" font-size="28" class="muted">7세그먼트 표시</text>
+  <text x="1700" y="723" text-anchor="middle" font-size="38" font-weight="700">PC · Tera Term</text>
+  <text x="1700" y="781" text-anchor="middle" font-size="28" class="muted">측정값 로그</text>
+
+  <text x="90" y="978" font-size="26" class="muted">측정값: 조도 · 온도 · 기압 · 고도</text>
+  <text x="90" y="1022" font-size="22" class="muted">화살표는 주요 데이터 흐름을 나타냅니다.</text>
+</svg>
