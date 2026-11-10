@@ -26,11 +26,11 @@
 
 ## 3. 시스템 아키텍처
 
-![Application, 사용자 드라이버, STM32 HAL의 소프트웨어 아키텍처](docs/images/system_architecture.png)
+![README용 Application, 사용자 드라이버, STM32 HAL 소프트웨어 아키텍처](docs/images/readme_architecture.png)
 
-편집 가능한 [draw.io 원본](docs/images/system_architecture.drawio) · [SVG](docs/images/system_architecture.svg) · [고해상도 PNG](docs/images/system_architecture.png)
+편집 가능한 [draw.io 원본](docs/images/readme_architecture.drawio) · [SVG](docs/images/readme_architecture.svg) · [고해상도 PNG](docs/images/readme_architecture.png)
 
-> 이 그림은 코드의 호출·사용 관계를 나타내는 소프트웨어 구조도입니다. `main()`의 `while (1)`은 `HAL_GetTick()`으로 1 ms 시간값을 조회해 100 ms 센싱과 500 ms UART 출력을 수행합니다. 시간값 조회와 `SysTick_Handler()`의 `HAL_IncTick()` 갱신은 별도 기능이며, 배선 정보는 [하드웨어 구성](docs/02_hardware.md)을 참고하세요.
+> README용으로 별도 구성한 16:9 소프트웨어 개요도입니다. 화살표는 호출·사용 관계를 나타냅니다. `main()`은 `HAL_GetTick()`으로 1 ms 시간값을 조회해 100 ms 센싱과 500 ms UART 출력을 수행하며, tick 갱신은 `SysTick_Handler()`의 `HAL_IncTick()`에서 별도로 처리합니다. 상세 동작은 [시스템 아키텍처 문서](docs/01_system_architecture.md)를 참고하세요.
 
 ## 4. 개발 환경 및 사용 기술
 

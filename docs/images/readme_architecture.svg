@@ -1,0 +1,148 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080" role="img" aria-labelledby="title description">
+  <title id="title">README firmware software architecture</title>
+  <desc id="description">A distinct 16:9 overview of the application, user drivers, and STM32 HAL software layers.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="10" markerHeight="10" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#334b68"/>
+    </marker>
+    <style>
+      .group { fill: #f3f6fa; stroke: #d3deea; stroke-width: 2; }
+      .node { fill: #ffffff; stroke: #aab9ca; stroke-width: 2; }
+      .main-node { fill: #ffffff; stroke: #3e8b8c; stroke-width: 3; }
+      .group-title { fill: #233750; font: 700 20px 'WenQuanYi Zen Hei', 'Noto Sans KR', sans-serif; letter-spacing: 1px; }
+      .group-detail { fill: #63748a; font: 16px 'WenQuanYi Zen Hei', 'Noto Sans KR', sans-serif; }
+      .title { fill: #20344d; font: 700 30px 'WenQuanYi Zen Hei', 'Noto Sans KR', sans-serif; }
+      .node-title { fill: #233750; font: 700 21px 'WenQuanYi Zen Hei', 'Noto Sans KR', sans-serif; }
+      .section { fill: #287b7d; font: 700 16px 'WenQuanYi Zen Hei', 'Noto Sans KR', sans-serif; letter-spacing: .3px; }
+      .text { fill: #34475f; font: 17px 'WenQuanYi Zen Hei', 'Noto Sans KR', sans-serif; }
+      .small { fill: #5b6d84; font: 15px 'WenQuanYi Zen Hei', 'Noto Sans KR', sans-serif; }
+      .mono { fill: #34475f; font: 16px 'DejaVu Sans Mono', 'WenQuanYi Zen Hei', monospace; }
+      .edge { fill: none; stroke: #334b68; stroke-width: 2.5; stroke-linecap: square; stroke-linejoin: miter; marker-end: url(#arrow); }
+      .edge-label { fill: #334b68; font: 15px 'DejaVu Sans Mono', 'WenQuanYi Zen Hei', monospace; }
+      .rule { stroke: #dfe7ef; stroke-width: 1.5; }
+      .accent { fill: #287b7d; }
+    </style>
+  </defs>
+
+  <rect width="1920" height="1080" fill="#ffffff"/>
+  <text class="title" x="60" y="58">펌웨어 소프트웨어 아키텍처</text>
+  <text class="group-detail" x="60" y="88">STM32F103RBT6 · main.c · 베어메탈 super-loop · 동기식 HAL 호출</text>
+  <text class="group-detail" x="1860" y="58" text-anchor="end">README OVERVIEW · 16:9</text>
+
+  <rect class="group" x="40" y="120" width="515" height="850" rx="14"/>
+  <text class="group-title" x="70" y="160">APPLICATION</text>
+  <text class="group-detail" x="70" y="186">main.c · 제어와 측정 데이터 보유</text>
+
+  <rect class="group" x="680" y="120" width="520" height="740" rx="14"/>
+  <text class="group-title" x="710" y="160">USER DRIVERS</text>
+  <text class="group-detail" x="710" y="186">센서 처리 · 표시 제어</text>
+
+  <rect class="group" x="1325" y="120" width="550" height="870" rx="14"/>
+  <text class="group-title" x="1355" y="160">STM32 HAL</text>
+  <text class="group-detail" x="1355" y="186">주변장치 API · MSP / 시스템 tick</text>
+
+  <g aria-label="호출 또는 사용 관계">
+    <path class="edge" d="M 512 315 H 590 V 240 H 1390"/>
+    <path class="edge" d="M 512 500 H 620 V 345 H 750"/>
+    <path class="edge" d="M 512 550 H 660 V 535 H 750"/>
+    <path class="edge" d="M 512 640 H 680 V 735 H 750"/>
+    <path class="edge" d="M 1140 345 H 1260 V 428 H 1390"/>
+    <path class="edge" d="M 1140 535 H 1270 V 570 H 1390"/>
+    <path class="edge" d="M 1140 580 H 1250 V 690 H 1390"/>
+    <path class="edge" d="M 1140 735 H 1300 V 735 H 1390"/>
+    <path class="edge" d="M 512 655 H 610 V 840 H 1390"/>
+    <path class="edge" d="M 512 690 H 630 V 940 H 1390"/>
+  </g>
+
+  <g aria-label="Application">
+    <rect class="main-node" x="82" y="260" width="430" height="440" rx="10"/>
+    <rect class="accent" x="82" y="260" width="8" height="440" rx="4"/>
+    <text class="node-title" x="112" y="300">Application · main()</text>
+    <text class="section" x="112" y="339">시작 및 초기화</text>
+    <text class="mono" x="112" y="369">HAL_Init · SystemClock_Config</text>
+    <text class="small" x="112" y="392">HSI / 2 × PLL16 · 64 MHz</text>
+    <text class="mono" x="112" y="420" font-size="15">MX_GPIO_Init · MX_USART2_UART_Init</text>
+    <text class="mono" x="112" y="447" font-size="15">MX_I2C1_Init · MX_SPI1_Init</text>
+    <line class="rule" x1="112" y1="467" x2="482" y2="467"/>
+    <text class="section" x="112" y="498">주기 실행 · while (1)</text>
+    <text class="mono" x="112" y="528">HAL_GetTick() · 1 ms 시간값 조회</text>
+    <text class="mono" x="112" y="558" font-size="15">100 ms · BH1750_ReadLux</text>
+    <text class="mono" x="112" y="585" font-size="15">BMP280_ReadData · 측정값 갱신</text>
+    <text class="mono" x="112" y="612" font-size="14">압력 변경 시 · TM1637_DisplayDecimal</text>
+    <text class="mono" x="112" y="647">500 ms · printf 센서 로그</text>
+    <text class="small" x="112" y="682">센싱 / UART 조건을 반복 검사하는 super-loop</text>
+
+    <rect class="node" x="82" y="750" width="430" height="145" rx="10"/>
+    <text class="node-title" x="112" y="790">측정 데이터</text>
+    <text class="mono" x="112" y="827">illuminance · temperature</text>
+    <text class="mono" x="112" y="855">pressure · altitude</text>
+    <text class="small" x="482" y="879" text-anchor="end">main.c 내부 저장값</text>
+  </g>
+
+  <g aria-label="사용자 드라이버">
+    <rect class="node" x="750" y="280" width="390" height="130" rx="10"/>
+    <text class="node-title" x="778" y="318">조도 측정</text>
+    <text class="mono" x="778" y="352">BH1750_Init</text>
+    <text class="mono" x="778" y="380">BH1750_ReadLux</text>
+    <text class="small" x="778" y="399">I2C 기반 센서 접근</text>
+
+    <rect class="node" x="750" y="460" width="390" height="155" rx="10"/>
+    <text class="node-title" x="778" y="498">온도 · 기압 · 고도</text>
+    <text class="mono" x="778" y="533">BMP280_Init</text>
+    <text class="mono" x="778" y="561">BMP280_ReadData</text>
+    <text class="small" x="778" y="592">보정 및 파생값 계산 · SPI</text>
+
+    <rect class="node" x="750" y="670" width="390" height="140" rx="10"/>
+    <text class="node-title" x="778" y="708">7세그먼트 표시</text>
+    <text class="mono" x="778" y="742" font-size="14">TM1637_Init · TM1637_DisplayDecimal</text>
+    <text class="mono" x="778" y="771" font-size="15">TM1637_DisplayString</text>
+    <text class="small" x="778" y="795">GPIO 비트뱅잉</text>
+  </g>
+
+  <g aria-label="STM32 HAL">
+    <rect class="node" x="1390" y="190" width="430" height="160" rx="10"/>
+    <text class="node-title" x="1418" y="222">초기화 기반</text>
+    <text class="mono" x="1418" y="250" font-size="12">HAL_Init · HAL_RCC_OscConfig · HAL_RCC_ClockConfig</text>
+    <text class="mono" x="1418" y="276" font-size="13">HAL_I2C_Init · HAL_SPI_Init · HAL_UART_Init</text>
+    <text class="mono" x="1418" y="302" font-size="13">HAL_MspInit · HAL_I2C_MspInit</text>
+    <text class="mono" x="1418" y="328" font-size="12">HAL_SPI_MspInit · HAL_UART_MspInit · HAL_GPIO_Init</text>
+
+    <rect class="node" x="1390" y="365" width="430" height="125" rx="10"/>
+    <text class="node-title" x="1418" y="402">I2C 서비스</text>
+    <text class="mono" x="1418" y="435" font-size="15">HAL_I2C_IsDeviceReady</text>
+    <text class="mono" x="1418" y="462" font-size="14">HAL_I2C_Master_Transmit / Receive</text>
+    <text class="small" x="1795" y="483" text-anchor="end">I2C1 · 100 kHz</text>
+
+    <rect class="node" x="1390" y="510" width="430" height="120" rx="10"/>
+    <text class="node-title" x="1418" y="547">SPI 서비스</text>
+    <text class="mono" x="1418" y="580" font-size="15">HAL_SPI_Transmit / Receive</text>
+    <text class="small" x="1795" y="612" text-anchor="end">SPI1 · Mode 3 · 8 MHz</text>
+
+    <rect class="node" x="1390" y="650" width="430" height="125" rx="10"/>
+    <text class="node-title" x="1418" y="687">GPIO 서비스</text>
+    <text class="mono" x="1418" y="720" font-size="15">HAL_GPIO_WritePin / ReadPin</text>
+    <text class="small" x="1418" y="750">CS 제어 · TM1637 CLK / DIO</text>
+
+    <rect class="node" x="1390" y="800" width="430" height="80" rx="10"/>
+    <text class="node-title" x="1418" y="832">UART 출력</text>
+    <text class="mono" x="1418" y="861" font-size="15">HAL_UART_Transmit · USART2 115200</text>
+
+    <rect class="node" x="1390" y="900" width="430" height="80" rx="10"/>
+    <text class="node-title" x="1418" y="932">시스템 시간</text>
+    <text class="mono" x="1418" y="961" font-size="14">HAL_GetTick · SysTick_Handler / HAL_IncTick</text>
+  </g>
+
+  <text class="edge-label" x="790" y="830">printf → _write → __io_putchar</text>
+  <text class="small" x="1257" y="679">BMP280 CS 제어</text>
+  <text class="small" x="1160" y="759">TM1637 비트뱅잉</text>
+
+  <g aria-label="범례">
+    <path class="edge" d="M 70 1030 H 128"/>
+    <text class="text" x="145" y="1036">호출 / 사용</text>
+    <rect x="295" y="1018" width="20" height="20" rx="3" fill="#f3f6fa" stroke="#d3deea" stroke-width="1.5"/>
+    <text class="text" x="326" y="1036">계층</text>
+    <rect x="405" y="1018" width="20" height="20" rx="3" fill="#ffffff" stroke="#aab9ca" stroke-width="1.5"/>
+    <text class="text" x="436" y="1036">기능 블록</text>
+    <text class="small" x="1860" y="1036" text-anchor="end">시간 조회(HAL_GetTick)와 tick 갱신(SysTick IRQ)은 별도 기능</text>
+  </g>
+</svg>
