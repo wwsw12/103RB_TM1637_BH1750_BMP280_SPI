@@ -104,4 +104,4 @@ Git 이력·디버깅 로그가 프로젝트에 없어, **실제 장애 이력�
 | CubeMX 생성 | `main.c` 나머지(`MX_*_Init`, `SystemClock_Config`), [stm32f1xx_hal_msp.c](Core/Src/stm32f1xx_hal_msp.c), [stm32f1xx_it.c](Core/Src/stm32f1xx_it.c) | ST 도구 |
 | ST 제공 라이브러리 | `Drivers/STM32F1xx_HAL_Driver`, `Drivers/CMSIS` | ST |
 
-> `assets/` 폴더에 넣을 이미지(배선 사진, 터미널 캡처, 로직 분석기 파형)가 아직 없어 이미지 링크는 포함하지 않았습니다.
+> 배선 사진, 터미널 캡처, 로직 분석기 파형 등 보조 이미지는 아직 없습니다.
