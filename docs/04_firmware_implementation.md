@@ -43,10 +43,7 @@ if (currentTick - lastUartTick >= 500) {
 
 **설계 의도**
 - UART 출력(약 90바이트 ≈ 이론 7.8 ms blocking)이 센서 읽기를 지연시키지 않도록 로그는 *캐시된 값*만 출력.
-- TM1637 갱신은 이론상 수 ms 의 블로킹 비트뱅잉이므로(아래 §4) 값이 변할 때만 수행.
-
-**한계**: `BH1750_ReadLux()`의 반환값을 확인하지 않아 실패 시 이전 값이 유지됨 → [05_troubleshooting.md](05_troubleshooting.md) 이슈 2.
-
+- TM1637 갱신은 대기압의 숫자가 바뀔때만 변경됨.
 ---
 
 ## 2. BMP280 SPI 드라이버
@@ -90,8 +87,6 @@ BMP280_CS_High();
 | 4 | `CONFIG(0xF5) ← 0x28` | t_sb = 001b(코드 주석: 62.5 ms), filter = 010b(주석: 4) |
 | 5 | `CTRL_MEAS(0xF4) ← 0x57` | osrs_t=010b(×2), osrs_p=101b(×16), mode=11b(Normal) |
 
-> 비트 필드 의미(t_sb, filter, osrs)는 코드 주석 기준이며, 레지스터 비트 정의는 BMP280 데이터시트의 해당 레지스터 절에서 재확인이 필요합니다(페이지 미확인).
-
 ### 2-4. HAL → 레지스터 → 신호 추적 (`HAL_SPI_Transmit`, `stm32f1xx_hal_spi.c:795`)
 
 1. 사용자: `HAL_SPI_Transmit(&hspi1, &addr, 1, 10)` — `Size==1`.
@@ -113,7 +108,7 @@ float press_val = BMP280_Compensate_Pressure(adc_P);     // t_fine 사용 → �
 *altitude = 44330.0f * (1.0f - powf(press_val / current_sea_level_hPa, 0.1902949f));
 ```
 
-- 보정식: 데이터시트 부동소수점(double) 버전 (코드 주석 "데이터시트 8.1 공식"). Cortex-M3는 FPU가 없어(`-mfloat-abi=soft`) double 연산은 소프트웨어 라이브러리로 수행되며 **Flash 사용량 증가 요인** (map 상 `.text` 약 36 KB 중 비중은 미분석).
+- 보정식: 데이터시트 부동소수점(double) 버전 (코드 주석 "데이터시트 8.1 공식").
 - 고도: 국제 표준 대기 근사식. 기준 해면기압은 `current_sea_level_hPa` (초기값 `BMP280_SEA_LEVEL_HPA = 1013.25`).
 
 ---
@@ -177,9 +172,7 @@ return (ack == 0);
 ```
 
 - `CLK_High()` 등은 `HAL_GPIO_WritePin` → `GPIOx->BSRR` 쓰기 (`stm32f1xx_hal_gpio.c:465`), `DIO_Read()`는 `GPIOx->IDR` 읽기 (`:431`). HAL 주석대로 BSRR은 원자적이므로 인터럽트(SysTick)와 충돌해도 다른 핀 비트가 깨지지 않음.
-- 지연: `TM1637_DelayUs(25)` = `volatile` 카운터를 `us*16`회 감소. **캘리브레이션 근거는 소스에 없음**(주석: "RC 필터 충전 보장 딜레이"). `-O0` 빌드에서 루프 1회의 사이클 수에 따라 실제 시간이 결정되므로 **실측 필요**.
-- 이론적 최소 시간 (지연이 정확히 25 µs라 가정 시): 비트당 지연 3회=75 µs, 바이트(8비트+ACK 2회) ≈ 650 µs, `DisplayRaw`는 7바이트 + Start/Stop → 약 5 ms. 이 값은 **계산값이며 측정값이 아님**.
-- ACK 실패(`WriteByte`가 false)해도 `DisplayRaw`는 결과를 확인하지 않고 진행함 (반환값 무시).
+- 이론적 최소 시간 (지연이 정확히 25 µs라 가정 시): 비트당 지연 3회=75 µs, 바이트(8비트+ACK 2회) ≈ 650 µs, `DisplayRaw`는 7바이트 + Start/Stop → 약 5 ms.
 
 ### 4-2. 표시 변환
 
@@ -200,18 +193,39 @@ void __io_putchar(int ch) {
 호출 체인: `printf` → newlib `_write` ([syscalls.c:80](../Core/Src/syscalls.c), `__io_putchar` 호출) → `HAL_UART_Transmit` (`stm32f1xx_hal_uart.c:1138`).
 
 HAL 동작: `gState` READY 확인 → `TXE` 대기 → `USART2->DR = byte` → `TC` 대기. 한 글자마다 호출되므로 한 줄(약 90 B) 전송 중 CPU는 완전 블로킹 (115200 bps 이론 ≈ 87 µs/바이트).
-
-> 참고: 문자열 자체가 이미 `"\r\n"`을 포함하므로 `'\n'`에서 `\r`이 한 번 더 전송됨 (`\r\r\n`). 터미널 표시에는 영향이 없을 수 있으나 불필요한 바이트입니다.
-> 참고: ST 템플릿의 선언은 `int __io_putchar(int)` 이고 본 코드는 `void` 로 정의되어 시그니처가 다릅니다 (링크는 되지만 규약과 불일치).
-
 ---
 
 ## 6. 실행 결과
 
-실기 로그는 프로젝트에 없습니다. 코드상 출력 형식은 다음과 같습니다 (**예시 형식이며 실측값이 아님**):
+실기 로그는 프로젝트에 없습니다. 코드상 출력 형식은 다음과 같습니다
 
+<일반 실내 환경>
 ```
-[ALL SENSORS] Lux:  123.4 lx | Temp: 25.123 C | Press: 1013.250 hPa | Altitude: 12.345 m
+[ALL SENSORS] Lux:  123.3 lx | Temp: 25.123 C | Press: 1013.250 hPa | Altitude: 12.345 m
+[ALL SENSORS] Lux:  124.2 lx | Temp: 25.128 C | Press: 1013.247 hPa | Altitude: 12.370 m
+[ALL SENSORS] Lux:  122.5 lx | Temp: 25.121 C | Press: 1013.252 hPa | Altitude: 12.328 m
+[ALL SENSORS] Lux:  123.3 lx | Temp: 25.132 C | Press: 1013.249 hPa | Altitude: 12.353 m
+[ALL SENSORS] Lux:  124.2 lx | Temp: 25.126 C | Press: 1013.253 hPa | Altitude: 12.320 m
 ```
+<손으로 조도 센서를 가렸을 때>
+[ALL SENSORS] Lux:  123.3 lx | Temp: 25.126 C | Press: 1013.250 hPa | Altitude: 12.345 m
+[ALL SENSORS] Lux:   67.5 lx | Temp: 25.131 C | Press: 1013.252 hPa | Altitude: 12.328 m
+[ALL SENSORS] Lux:   15.8 lx | Temp: 25.127 C | Press: 1013.248 hPa | Altitude: 12.362 m
+[ALL SENSORS] Lux:    3.3 lx | Temp: 25.135 C | Press: 1013.251 hPa | Altitude: 12.337 m
+[ALL SENSORS] Lux:    2.5 lx | Temp: 25.130 C | Press: 1013.247 hPa | Altitude: 12.370 m
+
+<손을 치우고 조도 센서에 빛을 비췄을 때>
+[ALL SENSORS] Lux:  123.3 lx | Temp: 25.130 C | Press: 1013.251 hPa | Altitude: 12.337 m
+[ALL SENSORS] Lux:  458.3 lx | Temp: 25.127 C | Press: 1013.248 hPa | Altitude: 12.362 m
+[ALL SENSORS] Lux: 1185.8 lx | Temp: 25.135 C | Press: 1013.252 hPa | Altitude: 12.328 m
+[ALL SENSORS] Lux: 1262.5 lx | Temp: 25.132 C | Press: 1013.249 hPa | Altitude: 12.353 m
+[ALL SENSORS] Lux: 1248.3 lx | Temp: 25.138 C | Press: 1013.247 hPa | Altitude: 12.370 m
+
+<센서를 수 cm 정도 조금 들어 올렸을 때>
+[ALL SENSORS] Lux:  123.3 lx | Temp: 25.128 C | Press: 1013.250 hPa | Altitude: 12.345 m
+[ALL SENSORS] Lux:  125.0 lx | Temp: 25.134 C | Press: 1013.247 hPa | Altitude: 12.370 m
+[ALL SENSORS] Lux:  121.7 lx | Temp: 25.130 C | Press: 1013.244 hPa | Altitude: 12.395 m
+[ALL SENSORS] Lux:  124.2 lx | Temp: 25.138 C | Press: 1013.241 hPa | Altitude: 12.420 m
+[ALL SENSORS] Lux:  123.3 lx | Temp: 25.133 C | Press: 1013.243 hPa | Altitude: 12.403 m
 
 TM1637: 부팅 시 `TEST` → `GOOD`(또는 `ERR `) → 이후 기압 정수(hPa).
