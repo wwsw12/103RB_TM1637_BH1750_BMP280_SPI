@@ -1,6 +1,6 @@
 # 03. STM32CubeMX 및 MCU 주변장치 설정
 
-> 근거: [.ioc](../p116.103RB_TM1637_BH1750_BMP280_SPI.ioc), [main.c](../Core/Src/main.c) (`MX_*_Init`, `SystemClock_Config`), [stm32f1xx_hal_msp.c](../Core/Src/stm32f1xx_hal_msp.c), HAL 소스(`Drivers/STM32F1xx_HAL_Driver`).
+> [main.c](../Core/Src/main.c) (`MX_*_Init`, `SystemClock_Config`), [stm32f1xx_hal_msp.c](../Core/Src/stm32f1xx_hal_msp.c)
 >  **RCC, GPIO, I2C1, SPI1, USART2**.
 
 ## 0. 초기화 순서 (`main()`)
@@ -38,8 +38,7 @@ MX_SPI1_Init()              → HAL_SPI_Init  → HAL_SPI_MspInit  (클럭 + PA5
 | 틱 우선순위 | 15 (최하위) |
 | 우선순위 그룹 | `NVIC_PRIORITYGROUP_4` (4-bit preemption) |
 | 핸들러 | `SysTick_Handler → HAL_IncTick()` |
-`HAL_GetTick()`은 이 틱으로 증가하는 `uwTick`을 읽으며,
-메인 루프 스케줄링(100 ms/500 ms)과 모든 HAL timeout의 기준입니다.
+-`HAL_GetTick()`은 이 틱으로 증가하는 `uwTick`을 읽으며, 메인 루프 스케줄링(100 ms/500 ms)과 모든 HAL timeout의 기준입니다.
 
 ## 3. GPIO
 
