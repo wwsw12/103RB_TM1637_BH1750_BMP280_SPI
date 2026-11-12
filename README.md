@@ -26,6 +26,8 @@
 
 ## 3. 시스템 아키텍처
 
+> 자세한 내용은 [01_system_architecture.md](docs/01_system_architecture.md)에서 확인할 수 있습니다.
+
 ![STM32 기반 환경 모니터링 시스템 아키텍처](docs/images/system-architecture.png)
 
 > 화살표는 주요 데이터 흐름을 나타냅니다. 측정값은 STM32F103RB에서 수집·계산되어 TM1637 7세그먼트와 PC 시리얼 로그로 전달됩니다.
