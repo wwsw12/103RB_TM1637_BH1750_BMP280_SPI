@@ -47,7 +47,7 @@ MX_SPI1_Init()              → HAL_SPI_Init  → HAL_SPI_MspInit  (클럭 + PA5
 |---|---|---|
 | PA4 `BMP280_CS` | Output, 초기 High, Speed High | `GPIO_MODE_OUTPUT_PP`, `NOPULL` |
 | PB8 `TM1637_CLK` | Output, 초기 High, Speed High | `GPIO_MODE_OUTPUT_PP`, `NOPULL` |
-| PB9 `TM1637_DIO` | Output **Open-Drain**, Pull-up, 초기 High | `GPIO_MODE_OUTPUT_OD`, `GPIO_PULLUP` |
+| PB9 `TM1637_DIO` | Output **Open-Drain**, Pull-up(실제 미적용), 초기 High | `GPIO_MODE_OUTPUT_OD`, `GPIO_PULLUP` |
 
 ```c
 // main.c : MX_GPIO_Init (CubeMX 생성)
@@ -56,8 +56,10 @@ HAL_GPIO_WritePin(GPIOB, TM1637_CLK_Pin|TM1637_DIO_Pin, GPIO_PIN_SET);
 ...
 GPIO_InitStruct.Pin  = TM1637_DIO_Pin;
 GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
-GPIO_InitStruct.Pull = GPIO_PULLUP;
+GPIO_InitStruct.Pull = GPIO_PULLUP;   // F1 출력 모드에서는 HAL이 사용하지 않음
 ```
+
+- **`GPIO_PULLUP`은 실제로 적용되지 않음**: STM32F1은 출력 모드에서 내부 풀업/풀다운이 꺼집니다 (RM0008 Table 20 p.161, 9.1.8절 p.163). HAL도 `GPIO_MODE_OUTPUT_OD`에서는 `Pull` 값을 레지스터에 쓰지 않습니다 (`stm32f1xx_hal_gpio.c` `case GPIO_MODE_OUTPUT_OD`). DIO의 High는 TM1637 모듈의 외부 풀업이 만듭니다 ([02_hardware.md](02_hardware.md) 4-1절).
 
 - **왜 DIO만 Open-Drain인가**: ACK 비트에서 TM1637이 DIO를 구동하므로 MCU는 라인을 놓아야 함 .
 - 핀 속도 `GPIO_SPEED_FREQ_HIGH`는 F1에서 MODE=11(최대 50 MHz 슬루) 설정입니다.

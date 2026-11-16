@@ -49,7 +49,7 @@
 | I2C1_SCL / SDA | PB6 / PB7 (Open-Drain) | BH1750 (7-bit 주소 0x23) |
 | SPI1_SCK / MISO / MOSI | PA5 / PA6 / PA7 | BMP280 |
 | BMP280_CS | PA4 (GPIO Output, 초기 High) | BMP280 CSB |
-| TM1637_CLK / DIO | PB8 (Push-Pull) / PB9 (Open-Drain + Pull-up) | TM1637 |
+| TM1637_CLK / DIO | PB8 (Push-Pull) / PB9 (Open-Drain, 모듈 외부 풀업) | TM1637 |
 | USART2_TX / RX | PA2 / PA3 | PC (115200, 8N1) |
 | SWDIO / SWCLK | PA13 / PA14 | 디버거 |
 
@@ -66,7 +66,7 @@
 
 3. **SPI 레지스터 접근 규약** — Read는 주소 bit7=1, Write는 bit7=0, CS를 소프트웨어(GPIO)로 제어 (`BMP280_SPI_ReadRegs/WriteReg`)
 
-4. **TM1637 비트뱅잉** — LSB-first 8bit 전송 + 9번째 클럭 ACK 샘플링. DIO를 Open-Drain+Pull-up으로 두어 ACK 입력 시 핀 충돌 방지 (`tm1637.c`)
+4. **TM1637 비트뱅잉** — LSB-first 8bit 전송 + 9번째 클럭 ACK 샘플링. DIO를 Open-Drain으로 두고 High는 모듈의 외부 풀업이 만들게 하여 ACK 입력 시 핀 충돌 방지 (`tm1637.c`, [02_hardware.md](docs/02_hardware.md) 4-1절)
 
 5. **불필요한 버스 트랜잭션 제거** — 기압 정수값이 바뀔 때만 TM1637 갱신, UART는 캐시된 값 출력
 

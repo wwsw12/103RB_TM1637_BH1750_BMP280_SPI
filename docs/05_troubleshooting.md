@@ -25,7 +25,7 @@
 | 항목 | 내용 |
 |---|---|
 | 문제 | 한 선(DIO)을 MCU와 TM1637이 번갈아 구동 (ACK 구간은 TM1637이 Low 구동) |
-| 근거 | `.ioc`: `PB9.GPIO_ModeDefaultOutputPP=GPIO_MODE_OUTPUT_OD`, `PB9.GPIO_PuPd=GPIO_PULLUP` → CubeMX 기본(PP)에서 OD로 변경한 흔적 |
+| 근거 | `.ioc`: `PB9.GPIO_ModeDefaultOutputPP=GPIO_MODE_OUTPUT_OD`, `PB9.GPIO_PuPd=GPIO_PULLUP` → CubeMX 기본(PP)에서 OD로 변경한 흔적. 단, F1은 출력 모드에서 내부 풀업이 꺼지므로 `GPIO_PULLUP`은 실제로 적용되지 않고, High는 모듈의 외부 풀업이 만듦 ([02_hardware.md](02_hardware.md) 4-1절) |
 | 구현 | ACK 직전 `DIO_High()`로 라인을 놓고 `HAL_GPIO_ReadPin`(IDR)으로 샘플링 |
 | 비교 | Push-Pull이면 MCU가 High를 강하게 구동 → TM1637의 Low 구동과 충돌 가능 (일반 원리) |
 | 미확인 | 실제로 PP에서 문제가 발생했는지는 기록 없음 |
