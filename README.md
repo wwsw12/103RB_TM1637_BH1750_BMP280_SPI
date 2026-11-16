@@ -53,7 +53,7 @@
 | USART2_TX / RX | PA2 / PA3 | PC (115200, 8N1) |
 | SWDIO / SWCLK | PA13 / PA14 | 디버거 |
 
-회로도는 프로젝트에 없으므로 외부 부품(풀업 저항, 전원 레벨 등)은 [02_hardware.md](docs/02_hardware.md)에서 "확인 불가"로 구분했습니다.
+![STM32F103RB 하드웨어 연결 회로도](docs/images/hardware_schematic.png)
 
 ## 6. 핵심 펌웨어 구현 내용
 
