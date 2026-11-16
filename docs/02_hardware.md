@@ -18,7 +18,7 @@
 |---|---|---|---|---|
 | PA2 | USART2_TX |  Push-Pull | — | PC 수신 |
 | PA3 | USART2_RX | Input (No pull) | — | PC 송신 (코드상 수신 미사용) |
-| PA4 | `BMP280_CS` | Output PP, High speed | **High** (비선택) | BMP280 CSB |
+| PA4 | `BMP280_CS` | Output PP, High speed | High | BMP280 CSB |
 | PA5 | SPI1_SCK |  Push-Pull | — | BMP280 SCK |
 | PA6 | SPI1_MISO | Input (No pull) | — | BMP280 SDO |
 | PA7 | SPI1_MOSI |  Push-Pull | — | BMP280 SDI |
@@ -70,9 +70,6 @@ TM1637의 2선 프로토콜은 I2C와 비슷한 Start/Stop/ACK 형태이나 **I2
 | GPIO 출력 속도 | HIGH (HAL: 50 MHz 모드) | `GPIO_SPEED_FREQ_HIGH` |
 | I2C 속도 | 100 kHz | `hi2c1.Init.ClockSpeed` |
 | SPI 속도 | 8 Mbit/s | `.ioc` `SPI1.CalculateBaudRate` |
-| 전원 전압(센서/모듈) | **확인 불가** | 회로도 없음 |
-| I2C 풀업 저항 값 | **확인 불가** | 회로도 없음 (MCU 내부 풀업은 I2C에 설정되지 않음: `GPIO_InitStruct.Pull` 미지정) |
-| TM1637 모듈 RC 필터 | **추정** | `tm1637.c`의 주석 "RC 필터 충전 보장 딜레이 (25us)"가 유일한 단서 |
 
 ## 5. 부품 사용 이유 (일반 원리 vs 프로젝트 확인)
 
