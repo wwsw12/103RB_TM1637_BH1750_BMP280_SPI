@@ -53,6 +53,7 @@
 | USART2_TX / RX | PA2 / PA3 | PC (115200, 8N1) |
 | SWDIO / SWCLK | PA13 / PA14 | 디버거 |
 
+
 ![STM32F103RB 하드웨어 연결 회로도](docs/images/hardware_schematic.png)
 
 ## 6. 핵심 펌웨어 구현 내용
