@@ -16,7 +16,7 @@
 
 - **BH1750 (I2C1, 0x23)**: 존재 확인 → Power On → Continuous H-Resolution 모드 → 2바이트 수신 후 `lux = raw / 1.2`
   
-- **BMP280 (SPI1, Mode 3, 8 MHz)**: Chip ID(0x58) 검증 → Soft reset → 보정계수 로드 → 오버샘플링/IIR/Normal 모드 설정 → 6바이트 버스트 리드 → 온도·기압·고도 계산
+- **BMP280 (SPI1, Mode 3, 8 MHz)**: Chip ID(0x58) 검증 → Soft reset → 보정계수 로드 → 오버샘플링/IIR/Normal 모드 설정 → 온도·기압·고도 계산
   
 - **TM1637 (PB8/PB9 비트뱅잉)**: 4-digit 표시, 폰트 테이블, 문자열("TEST"/"GOOD"/"ERR "), 기압 정수값 변경 시에만 갱신
   
