@@ -56,6 +56,8 @@
 
 ![STM32F103RB 하드웨어 연결 회로도](docs/images/hardware_schematic.png)
 
+자세한 내용: [02_hardware.md](docs/02_hardware.md)
+
 ## 6. 핵심 펌웨어 구현 내용
 
 1. **주기 분리 Super-loop** — `HAL_GetTick()` 차분으로 100 ms 센싱 / 500 ms UART 출력. `HAL_Delay()`는 부팅 시에만 사용 (`main.c`)
