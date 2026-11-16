@@ -2,11 +2,23 @@
 
 > 이 문서는 **회로도([hardware_schematic.png](images/hardware_schematic.png))**, **소스/`.ioc`**, **실제 사용 모듈 정보**를 근거로 작성했습니다.
 > 근거 수준은 다음과 같이 구분합니다.
-> - **확인** — 회로도·코드·개발자 확인으로 확정된 사항
-> - **일반 사양** — 해당 모듈/IC의 일반적인 구성 또는 데이터시트 내용 (실물·문서 페이지로 재확인 권장)
+> - **확인** — 회로도·코드·실물 사진·개발자 확인으로 확정된 사항
+> - **데이터시트** — 부품 데이터시트에서 쪽수까지 확인한 사항 (쪽수는 PDF 뷰어 기준)
+> - **일반 사양** — 해당 모듈/IC의 일반적인 구성 (데이터시트 미보유 또는 미확인)
 > - **확인 필요** — 측정 또는 실물 확인이 필요한 사항
+>
+> 참고 데이터시트: STM32F103x8/xB 데이터시트(DS5319), BMP280 데이터시트(Bosch), BH1750FVI 데이터시트(ROHM)
 
 ![STM32F103RB 하드웨어 연결 회로도](images/hardware_schematic.png)
+
+### 실제 배선 및 모듈 사진
+
+![전체 배선 — NUCLEO-F103RB, 브레드보드, 센서 모듈, TM1637 표시기(기압 1018 hPa 표시 중)](images/wiring_overview.jpg)
+
+| TM1637 4자리 모듈 | GY-302 (BH1750) | GY-BMP280 |
+|---|---|---|
+| ![TM1637 모듈](images/module_tm1637.jpg) | ![GY-302 모듈](images/module_gy302_bh1750.jpg) | ![GY-BMP280 모듈](images/module_gy_bmp280.jpg) |
+| 핀: CLK / DIO / GND / 5V | 핀: VCC / GND / SCL / SDA / ADDR (5핀 모두 결선) | 핀: VCC / GND / SCL / SDA / CSB / SDO |
 
 ## 1. 구성 요소와 역할
 
@@ -15,7 +27,7 @@
 | STM32F103RBT6 | NUCLEO-F103RB 보드 | USB (ST-LINK) | 마스터 MCU |
 | BH1750 | GY-302 모듈 | +3V3 | 조도 센서, I2C 7-bit 주소 0x23 (ADDR → GND) |
 | BMP280 | GY-BMP280 6핀 모듈 (VCC/GND/SCL/SDA/CSB/SDO) | +3V3 | 기압/온도 센서, SPI 접속 |
-| TM1637 | 4자리 7-segment 모듈 | **+5V** (NUCLEO 보드 5V 핀) | 7-segment LED 드라이버 |
+| TM1637 | 4자리 7-segment 모듈 (DIY MORE "4-Digit LED Display") | **+5V** (NUCLEO 보드 5V 핀) | 7-segment LED 드라이버 |
 | PC 로그 | NUCLEO 내장 ST-LINK 가상 COM 포트 | — | USART2 출력 (Tera Term) |
 
 ## 2. MCU 핀 할당표 (`.ioc` + `main.h` + `stm32f1xx_hal_msp.c` + 회로도)
@@ -48,8 +60,10 @@
 | SDA (PB7) | 양방향 | Open-Drain |
 | ADDR | — | **GND 연결 (확인)** → 7-bit 주소 0x23 |
 
+- **데이터시트** (BH1750FVI p.7): ADDR = 'L'일 때 슬레이브 주소는 `0100011`(= 0x23)입니다.
 - 주소 바이트: 7-bit `0x23` → HAL 규약상 `0x23 << 1 = 0x46` 전달 (HAL이 R/W 비트를 OR).
 - 통신: `Power On(0x01)` → `Continuous H-Res Mode(0x10)` 전송 후, 매 읽기마다 2바이트 수신.
+- **데이터시트** (BH1750FVI p.2): I2C SCL 최대 400 kHz → 100 kHz 설정은 범위 안. H-Resolution 측정 시간은 typ 120 ms / max 180 ms → 100 ms 주기로 읽으면 같은 측정값을 두 번 읽을 수 있습니다 ([05_troubleshooting.md](05_troubleshooting.md) B절 5번).
 - ADDR 연결은 회로도의 J1(4핀)에는 그려져 있지 않습니다. 회로도 갱신 시 ADDR → GND를 추가하는 것을 권장합니다.
 
 ### 3-2. SPI1 — BMP280 (GY-BMP280)
@@ -61,8 +75,9 @@
 | MISO (PA6) | 센서 → MCU | MISO를 별도 입력으로 사용 (3-wire 아님) |
 | CS (PA4) | MCU → 센서 | **소프트웨어 CS**, Low = 선택 (`SPI_NSS_SOFT`) |
 
-- **일반 사양**: BMP280은 SPI Mode '00'과 '11'을 모두 지원하고, SPI 클럭은 최대 10 MHz입니다. 따라서 Mode 3 / 8 MHz 설정은 사양 범위 안입니다. (데이터시트 SPI interface 절에서 재확인 권장)
-- **일반 사양**: BMP280은 CSB 핀에 Low가 들어오면 SPI 모드로 전환되고, 다음 전원 리셋까지 SPI를 유지합니다. 그래서 부팅 때 CS를 High로 두었다가 첫 트랜잭션에서 Low로 내리는 현재 구조로 SPI 모드에 진입합니다.
+- **데이터시트** (BMP280 p.2, 5.3절 p.30): SPI는 최대 10 MHz, Mode '00'과 '11'을 지원합니다. 두 모드는 CSB 하강 직후의 SCK 레벨로 자동 구분됩니다. 따라서 Mode 3 / 8 MHz 설정은 사양 범위 안입니다.
+- **데이터시트** (BMP280 5.1절 p.28): CSB가 한 번이라도 Low가 되면 SPI가 선택되고, 다음 전원 리셋까지 I2C는 꺼집니다. 그래서 부팅 때 CS를 High로 두었다가 첫 트랜잭션에서 Low로 내리는 현재 구조로 SPI 모드에 진입합니다.
+- **데이터시트** (BMP280 p.31): CSB는 Active Low이고 칩 내부에 풀업이 있습니다. SDI는 SCK 상승 에지에서 읽히고 SDO는 하강 에지에서 바뀝니다.
 
 ### 3-3. TM1637 — GPIO 2선
 
@@ -105,12 +120,16 @@ TM1637만 5 V로 동작하고 MCU는 3.3 V이므로, 이 구간은 레벨 호환
 
 | 항목 | 내용 |
 |---|---|
-| MCU 핀 내압 | **일반 사양**: STM32F103의 PB8/PB9는 FT(5 V tolerant) 핀이므로 5 V 풀업이 걸려도 입력·Open-Drain에서 손상되지 않습니다. |
-| DIO (Open-Drain) | 모듈의 5 V 풀업이 High를 만들기 때문에 High 레벨은 약 5 V가 됩니다. **레벨 문제 없음** |
+| MCU 핀 내압 | **데이터시트** (STM32F103 핀 정의 표, PDF 33쪽): PB8/PB9는 `I/O FT`(5 V tolerant) 핀입니다. |
+| FT 핀 사용 조건 | **데이터시트** (STM32F103 I/O 정적 특성 표 주석 3, PDF 61쪽): FT 핀에 VDD + 0.3 V보다 높은 전압을 걸려면 **내부 풀업/풀다운을 꺼야** 합니다. |
+| DIO (Open-Drain) | 모듈의 5 V 풀업이 High를 만들면 High 레벨은 약 5 V가 됩니다. TM1637 쪽 레벨은 문제 없습니다. 다만 현재 PB9는 **내부 Pull-up이 켜져 있어** 위 FT 조건과 맞지 않습니다. 내부 풀업을 통해 5 V → 3.3 V로 작은 전류가 흐를 수 있습니다. |
 | CLK (Push-Pull) | MCU가 High를 3.3 V로 구동합니다. TM1637의 입력 High 기준(V<sub>IH</sub>)은 일반적으로 0.7 × VDD = 3.5 V(VDD 5 V일 때)라서, **3.3 V는 기준보다 낮아 여유가 없습니다.** 또 모듈 풀업(5 V)과 MCU Push-Pull High(3.3 V)가 맞물려 미세한 전류가 흐를 수 있습니다. |
-| 개선안 | CLK도 DIO처럼 **Open-Drain**으로 바꾸면 High를 모듈의 5 V 풀업이 만들어 V<sub>IH</sub>를 만족합니다. 또는 TM1637 모듈을 3.3 V로 구동하는 방법도 있습니다(밝기 저하 가능). |
+| 개선안 | ① PB9의 내부 Pull-up을 끄고(`GPIO_NOPULL`) 모듈 풀업만 사용 ② CLK(PB8)도 **Open-Drain + No pull**로 바꿔 High를 모듈의 5 V 풀업이 만들게 함 → V<sub>IH</sub> 만족. 또는 TM1637 모듈을 3.3 V로 구동(밝기 저하 가능). |
 
-> 현재 구성에서도 동작할 수 있지만 사양 여유가 없는 구간입니다. 오실로스코프로 CLK High 레벨을 측정해 두면 근거 자료가 됩니다.
+> 현재 구성에서도 동작은 하지만(배선 사진의 `1018` 표시) 사양 여유가 없는 구간입니다.
+> - TM1637 V<sub>IH</sub>(0.7 × VDD)는 TM1637 데이터시트를 보유하지 않아 **일반 사양**으로 남겨 둡니다.
+> - 모듈 풀업이 5 V에 연결되어 있다는 점은 모듈 기판의 SMD 부품(사진 우상단) 배치로 본 **추정**입니다. 멀티미터로 DIO–5V 사이 저항을 재면 확인할 수 있습니다.
+> - 오실로스코프 측정은 [05_troubleshooting.md](05_troubleshooting.md)에서 다룹니다.
 
 ## 5. 부품 사용 이유 (일반 원리 vs 프로젝트 확인)
 
@@ -131,13 +150,17 @@ TM1637만 5 V로 동작하고 MCU는 3.3 V이므로, 이 구간은 레벨 호환
 - [x] BH1750 ADDR 핀 → GND, 주소 0x23 (개발자 확인)
 - [x] BMP280 모듈을 SPI 모드로 결선 (회로도 J2: CSB → PA4, SDO → MISO)
 - [x] PC 로그 경로: ST-LINK 가상 COM 포트
-- [ ] GY-302 모듈의 I2C 풀업 저항 값 (실물 저항 마킹 또는 오실로스코프로 상승 시간 측정)
+- [x] BMP280 SPI Mode 3 / 8 MHz가 사양 범위 안 (BMP280 데이터시트)
+- [x] PB8/PB9가 5 V tolerant 핀 (STM32F103 데이터시트)
+- [ ] GY-302 모듈의 I2C 풀업 저항 값 (부품면 저항 마킹 또는 멀티미터로 SDA–VCC 저항 측정)
+- [ ] TM1637 모듈의 CLK/DIO 풀업이 5 V에 연결되어 있는지 (멀티미터로 DIO–5V 저항 측정)
+- [ ] PB9 내부 Pull-up 사용이 FT 조건(5 V 인가 시 내부 풀업 OFF)과 맞지 않는 부분 (4-1절)
 - [ ] TM1637 CLK High 레벨(3.3 V Push-Pull)이 5 V 구동 TM1637의 V<sub>IH</sub>를 만족하는지 (4-1절)
-- [ ] TM1637 CLK/DIO 파형 (로직 분석기) 및 모듈 내부 RC 필터 영향
+- [ ] TM1637 CLK/DIO 파형 및 모듈 RC 필터 영향 → [05_troubleshooting.md](05_troubleshooting.md)
 - [ ] 8 MHz SPI 배선 길이 (점퍼선이 길면 파형 왜곡 가능)
 
 ## 7. 추가하면 좋은 자료
 
-- 실제 배선 사진 → `docs/images/`에 추가 후 이 문서에 링크
-- GY-302 모듈 기판 사진 (I2C 풀업 저항 마킹 확인용)
-- 로직 분석기 캡처: SPI(BMP280 Chip ID 읽기), I2C(BH1750 2바이트 수신), TM1637 1바이트 전송 + ACK
+- GY-302 모듈 **부품면** 사진 (I2C 풀업 저항 마킹 확인용 — 현재 사진은 핀 인쇄면)
+- TM1637 데이터시트 (V<sub>IH</sub> 확인용)
+- NUCLEO-64 사용자 매뉴얼 UM1724 (USART2 ↔ ST-LINK 연결 솔더 브리지 확인용)
