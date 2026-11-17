@@ -36,7 +36,7 @@
 
 | 주기 / 조건 | 호출 및 처리 | 데이터 영향 |
 |---|---|---|
-| 100 ms | `BH1750_ReadLux(&hi2c1, &illuminance)` | I2C 수신 성공 시 조도 갱신. 반환 상태는 `main.c`에서 검사하지 않으므로 실패 시 이전 값 유지 |
+| 200 ms (측정 시간 max 180 ms보다 길게) | `BH1750_ReadLux(&hi2c1, &illuminance)` | I2C 수신 성공 시 조도 갱신. 실패 시 이전 값 유지 + 연속 실패 카운트, 5회 연속 실패 시 `FAILED` 로그 1회, 복구 시 `recovered` 로그 1회. 단, 선을 뺐다 꽂으면 I2C BUSY 잠금으로 복구되지 않음 (05 문서 4장 7번) |
 | 100 ms | `BMP280_ReadData(&hspi1, &temperature, &pressure, &altitude)` 성공 시 압력 반올림값 비교 | 성공한 경우 온도·기압·고도 갱신. 반올림 압력이 `lastDisplayedPress`와 다를 때만 `TM1637_DisplayDecimal()` 호출 |
 | 500 ms | `printf("[ALL SENSORS] ...")` → `_write` → `__io_putchar` → `HAL_UART_Transmit` | 센서 통신 없이 Application에 저장된 최신 측정값을 USART2로 출력 |
 

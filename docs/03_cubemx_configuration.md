@@ -39,14 +39,14 @@ MX_SPI1_Init()              → HAL_SPI_Init  → HAL_SPI_MspInit  (클럭 + PA5
 | 우선순위 그룹 | `NVIC_PRIORITYGROUP_4` (4-bit preemption) |
 | 핸들러 | `SysTick_Handler → HAL_IncTick()` |
 
-- `HAL_GetTick()`은 이 틱으로 증가하는 `uwTick`을 읽으며, 메인 루프 스케줄링(100 ms/500 ms)과 모든 HAL timeout의 기준입니다.
+- `HAL_GetTick()`은 이 틱으로 증가하는 `uwTick`을 읽으며, 메인 루프 스케줄링(100 ms/200 ms/500 ms)과 모든 HAL timeout의 기준입니다.
 
 ## 3. GPIO
 
 | 핀 | CubeMX 설정 | 생성 코드 |
 |---|---|---|
 | PA4 `BMP280_CS` | Output, 초기 High, Speed High | `GPIO_MODE_OUTPUT_PP`, `NOPULL` |
-| PB8 `TM1637_CLK` | Output, 초기 High, Speed High | `GPIO_MODE_OUTPUT_PP`, `NOPULL` |
+| PB8 `TM1637_CLK` | Output **Open-Drain**, 초기 High, Speed High (`.ioc` `PB8.GPIO_ModeDefaultOutputPP=GPIO_MODE_OUTPUT_OD`) | `GPIO_MODE_OUTPUT_OD`, `NOPULL` |
 | PB9 `TM1637_DIO` | Output **Open-Drain**, Pull-up(실제 미적용), 초기 High | `GPIO_MODE_OUTPUT_OD`, `GPIO_PULLUP` |
 
 ```c

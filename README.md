@@ -10,7 +10,7 @@
 | 서로 다른 3종 인터페이스(I2C / SPI / 단선형 2-wire 프로토콜)를 한 MCU에서 통합 | 센서별 드라이버 분리 (`bh1750.c`, `bmp280.c`, `tm1637.c`) |
 | 데이터시트 기반 센서 구동 (레지스터 맵, 보정식) | BMP280 NVM 보정계수(24B) 읽기 + 데이터시트 8.1 보정식(double) 구현 |
 | 전용 HW 주변장치가 없는 장치(TM1637) 제어 | GPIO + 소프트웨어 지연으로 Start/Stop/Write/ACK 직접 구현 |
-| 센싱·표시·로깅 주기 분리 | `HAL_GetTick()` 기반 비차단(non-blocking) 주기 스케줄링 (100 ms / 500 ms) |
+| 센싱·표시·로깅 주기 분리 | `HAL_GetTick()` 기반 비차단(non-blocking) 주기 스케줄링 (BMP280 100 ms / BH1750 200 ms / UART 500 ms) |
 
 ## 2. 주요 구현 기능
 
@@ -49,7 +49,7 @@
 | I2C1_SCL / SDA | PB6 / PB7 (Open-Drain) | BH1750 (7-bit 주소 0x23) |
 | SPI1_SCK / MISO / MOSI | PA5 / PA6 / PA7 | BMP280 |
 | BMP280_CS | PA4 (GPIO Output, 초기 High) | BMP280 CSB |
-| TM1637_CLK / DIO | PB8 (Push-Pull) / PB9 (Open-Drain, 모듈 외부 풀업) | TM1637 |
+| TM1637_CLK / DIO | PB8 / PB9 (둘 다 Open-Drain, 모듈 10 kΩ 풀업이 5 V High 생성) | TM1637 |
 | USART2_TX / RX | PA2 / PA3 | PC (115200, 8N1) |
 | SWDIO / SWCLK | PA13 / PA14 | 디버거 |
 
@@ -60,13 +60,13 @@
 
 ## 6. 핵심 펌웨어 구현 내용
 
-1. **주기 분리 Super-loop** — `HAL_GetTick()` 차분으로 100 ms 센싱 / 500 ms UART 출력. `HAL_Delay()`는 부팅 시에만 사용 (`main.c`)
+1. **주기 분리 Super-loop** — `HAL_GetTick()` 차분으로 100 ms BMP280 센싱 / 200 ms BH1750 조도(측정 시간 max 180 ms 반영) / 500 ms UART 출력. `HAL_Delay()`는 부팅 시에만 사용 (`main.c`)
 
 2.**BMP280 보정 파이프라인** — 온도 계산으로 `t_fine`을 먼저 산출해야 기압 보정이 가능한 의존성을 코드 순서로 반영 (`bmp280.c: BMP280_ReadData`)
 
 3. **SPI 레지스터 접근 규약** — Read는 주소 bit7=1, Write는 bit7=0, CS를 소프트웨어(GPIO)로 제어 (`BMP280_SPI_ReadRegs/WriteReg`)
 
-4. **TM1637 비트뱅잉** — LSB-first 8bit 전송 + 9번째 클럭 ACK 샘플링. DIO를 Open-Drain으로 두고 High는 모듈의 외부 풀업이 만들게 하여 ACK 입력 시 핀 충돌 방지 (`tm1637.c`, [02_hardware.md](docs/02_hardware.md) 4-1절)
+4. **TM1637 비트뱅잉** — LSB-first 8bit 전송 + 9번째 클럭 ACK 샘플링. CLK·DIO를 모두 Open-Drain으로 두고 High는 모듈의 5 V 풀업이 만들게 하여, ACK 입력 시 핀 충돌을 막고 TM1637 V<sub>IH</sub>(3.5 V)를 만족 (`tm1637.c`, [02_hardware.md](docs/02_hardware.md) 4-1절)
 
 5. **불필요한 버스 트랜잭션 제거** — 기압 정수값이 바뀔 때만 TM1637 갱신, UART는 캐시된 값 출력
 
@@ -74,13 +74,36 @@
 
 ## 7. 트러블슈팅 요약
 
-Git 이력·디버깅 로그가 프로젝트에 없어, **실제 장애 이력은 만들어내지 않았습니다.** 대신 `05_troubleshooting.md`에는
+### [실제 사례 1] BMP280 SPI 통신 실패 — NUCLEO 모르포 핀 오배선
 
-- 코드 주석/구조에서 근거가 확인되는 **설계상 문제 대응 4건**
-- 소스 리뷰에서 발견한 **미해결 이슈 5건** (예: `LOCAL_SEA_LEVEL_HPA` 정의만 있고 미사용 → 고도 기준값이 1013.25 hPa로 유지)
-- 개발자가 직접 채워야 할 **"추가 작성이 필요한 사례"** 템플릿
+| 단계 | 내용 |
+|---|---|
+| **증상** | 부팅 시 TM1637에 `ERR `, UART에 `BMP280 Sensor Initialization FAILED!` (Chip ID ≠ 0x58) |
+| **측정** | 멀티미터로 전원·납땜 정상 확인 → 오실로스코프 2채널로 BMP280의 SCK(CH1)·CSB(CH2) 측정 |
+| **단서** | **CSB는 High → Low → High로 정상인데 SCK에는 클럭이 없음** → 펌웨어가 아니라 신호 경로 문제 |
+| **원인** | NUCLEO 보드 회로도(MB1136) 추적: CN10-26/28/30은 F103RB에서 솔더 브리지 설정상 **PB15/PB14/PB13**에 연결 (PA7/PA6/PA5 연결은 F302R8 전용, SB39 OPEN을 보드에서 육안 확인) |
+| **해결** | SPI 3선을 PA5/PA6/PA7이 실제로 연결된 **CN10-11/13/15**(D13/D12/D11)로 이동 → 정상 동작. 디버깅 중 낮췄던 SPI 설정(Mode 0, 1 MHz)과 최종 설정(Mode 3, 8 MHz) **모두 동작 확인** |
+| **교훈** | 개발 보드 핀은 MCU 핀 이름이 아니라 **보드 회로도 + 솔더 브리지 상태**로 확인 |
 
-을 구분하여 수록했습니다. → [05_troubleshooting.md](docs/05_troubleshooting.md)
+| 수정 전: CSB(초록)는 토글하지만 SCK(노랑)는 변화 없음 | 원인: CN10 핀의 솔더 브리지 구성 |
+|---|---|
+| <img src="docs/images/troubleshooting/05_scope_cs_vs_sck.jpg" width="320"> | <img src="docs/images/troubleshooting/08_nucleo_cn10_solder_bridges.png" width="420"> |
+
+### [실제 사례 2] 고도가 음수로 출력 — 기준 기압 미설정
+
+| 단계 | 내용 |
+|---|---|
+| **증상** | 책상 위에서 고도 **−42.7 m** 출력 (기압 1018.4 hPa) |
+| **단서** | 로그의 기압을 고도 공식에 직접 넣으니 로그와 같은 −42.76 m → **계산 코드는 정상, 입력값 문제** |
+| **원인** | 기준 기압이 기본값 1013.25 hPa로 남아 있음 (측정 기압이 더 높아 음수). 현지 기준값 상수는 정의만 되고 호출되지 않음 |
+| **해결** | 부팅 직후 첫 측정 완료(데이터시트 max 43.2 ms → 50 ms 대기)를 기다려 그 기압을 기준으로 설정 → **부팅 위치 = 0 m 상대 고도** |
+
+이 밖에 설계 단계에서 대응한 문제 4건과, 소스·데이터시트 리뷰와 보드 테스트로 찾은 이슈 6건을 정리했습니다. 이 중 4건을 코드로 수정했습니다.
+- 데이터시트 근거: BH1750 읽기 주기 200 ms, TM1637 CLK 3.3 V 구동이 V<sub>IH</sub> 3.5 V에 못 미쳐 Open-Drain으로 변경
+- 코드 리뷰: BH1750 읽기 실패 감지(연속 실패 카운터), `printf` 줄바꿈 `\r` 중복 제거
+- 미해결: I2C 선을 뺐다 꽂으면 BUSY 잠금으로 조도 읽기가 복구되지 않음 (원인 분석과 복구 절차만 정리)
+
+→ 전체 디버깅 과정과 측정 사진: [05_troubleshooting.md](docs/05_troubleshooting.md)
 
 ## 8. 테스트 및 결과
 
@@ -96,7 +119,7 @@ Git 이력·디버깅 로그가 프로젝트에 없어, **실제 장애 이력�
 | [02_hardware.md](docs/02_hardware.md) | 핀 할당, 인터페이스, 외부 검증 항목 |
 | [03_cubemx_configuration.md](docs/03_cubemx_configuration.md) | RCC/GPIO/I2C/SPI/UART/SysTick 설정과 계산 |
 | [04_firmware_implementation.md](docs/04_firmware_implementation.md) | 핵심 코드, HAL → 레지스터 추적 |
-| [05_troubleshooting.md](docs/05_troubleshooting.md) | 설계 대응, 발견 이슈, 추가 작성 필요 사례 |
+| [05_troubleshooting.md](docs/05_troubleshooting.md) | 실제 디버깅 사례 2건(SPI 오배선, 고도 기준값), 설계 대응, 발견 이슈 |
 | [06_testing_and_results.md](docs/06_testing_and_results.md) | 검증 현황, 한계, 개선 사항 |
 
 ## 10. 소스 구성

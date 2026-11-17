@@ -16,7 +16,7 @@
 
 ## 1. 주기 스케줄러 (Super-loop + HAL_GetTick)
 
-**목적**: 센서 읽기(100 ms)와 PC 출력(500 ms)을 `HAL_Delay()` 없이 분리하여 한 루프에서 처리.
+**목적**: BMP280 읽기(100 ms), BH1750 읽기(200 ms), PC 출력(500 ms)을 `HAL_Delay()` 없이 분리하여 한 루프에서 처리.
 **입력/출력**: `HAL_GetTick()` → 전역 캐시 `illuminance/temperature/pressure/altitude`, TM1637, UART.
 **처리 방식**: 폴링 (인터럽트/DMA 없음). 부호 없는 32-bit 뺄셈 `currentTick - last >= N` 으로 틱 오버플로(약 49.7일) 시에도 올바른 경과 시간 계산.
 
@@ -24,9 +24,21 @@
 // main.c  (USER CODE WHILE)
 uint32_t currentTick = HAL_GetTick();
 
+// BH1750: H-Resolution 측정 시간 max 180 ms (BH1750FVI 데이터시트 p.2) → 200 ms 주기
+if (currentTick - lastLuxTick >= BH1750_READ_PERIOD_MS) {   // 200U
+    lastLuxTick = currentTick;
+    if (BH1750_ReadLux(&hi2c1, &illuminance) == HAL_OK) {
+        if (luxFailCount >= BH1750_FAIL_LOG_COUNT)  // FAILED를 알렸던 경우만
+            printf("[I2C1] BH1750 read recovered\r\n");
+        luxFailCount = 0;                           // 비교 후 초기화
+    } else {
+        luxFailCount++;
+        if (luxFailCount == BH1750_FAIL_LOG_COUNT)  // 5회째 한 번만 (에지)
+            printf("[I2C1] BH1750 read FAILED %lu times in a row! ...\r\n", ...);
+    }
+}
 if (currentTick - lastSenseTick >= 100) {
     lastSenseTick = currentTick;
-    BH1750_ReadLux(&hi2c1, &illuminance);
     if (BMP280_ReadData(&hspi1, &temperature, &pressure, &altitude) == HAL_OK) {
         int16_t press_int = (int16_t)(pressure + 0.5f);
         if (press_int != lastDisplayedPress) {          // Dirty check
@@ -44,6 +56,8 @@ if (currentTick - lastUartTick >= 500) {
 **설계 의도**
 - UART 출력(약 90바이트 ≈ 이론 7.8 ms blocking)이 센서 읽기를 지연시키지 않도록 로그는 *캐시된 값*만 출력.
 - TM1637 갱신은 대기압의 숫자가 바뀔때만 변경됨.
+- BH1750은 측정 시간(max 180 ms)보다 짧게 읽으면 같은 값을 다시 읽게 되므로, 조도만 200 ms 주기로 분리.
+- BH1750 읽기 실패는 **연속 실패 카운터**로 판정: 일시적인 1~2회 실패는 무시하고, 5회 연속(약 1초) 실패한 순간(`==`)에만 로그 1줄, 복구 시 1줄. 실패마다 찍으면 초당 5줄이 쏟아져 센서 로그가 묻히고 blocking UART 전송으로 루프도 느려지기 때문.
 ---
 
 ## 2. BMP280 SPI 드라이버
@@ -184,11 +198,14 @@ return (ack == 0);
 
 ```c
 // main.c
-void __io_putchar(int ch) {
-    if (ch == '\n') HAL_UART_Transmit(&huart2, (uint8_t*)"\r", 1, 0xffff);
-    HAL_UART_Transmit(&huart2, (uint8_t*)&ch, 1, 0xffff);
+int __io_putchar(int ch) {
+    HAL_UART_Transmit(&huart2, (uint8_t *)&ch, 1, 0xFFFF);
+    return ch;
 }
 ```
+
+- 반환형 `int`: `syscalls.c`의 선언 `extern int __io_putchar(int ch)`과 일치시킴 (이전에는 `void`로 정의되어 선언과 불일치).
+- 줄바꿈 변환 없음: 모든 `printf` 문자열이 이미 `"\r\n"`으로 끝나므로, 이전의 `'\n'` → `"\r"` 추가 전송은 `\r\r\n`을 만들어 줄마다 1바이트를 낭비했음.
 
 호출 체인: `printf` → newlib `_write` ([syscalls.c:80](../Core/Src/syscalls.c), `__io_putchar` 호출) → `HAL_UART_Transmit` (`stm32f1xx_hal_uart.c:1138`).
 

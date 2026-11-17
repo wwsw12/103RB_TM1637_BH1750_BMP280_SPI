@@ -59,7 +59,7 @@
     <text class="mono" x="125" y="291">while (1) · HAL_GetTick()</text>
     <line class="rule" x1="125" y1="311" x2="445" y2="311"/>
     <text class="body" x="125" y="347">100 ms · 센싱</text>
-    <text class="mono" x="125" y="377">BH1750_ReadLux()</text>
+    <text class="mono" x="125" y="377">BH1750_ReadLux() · 200 ms</text>
     <text class="mono" x="125" y="407">BMP280_ReadData()</text>
     <text class="small" x="125" y="436">BMP 성공 + pressure 반올림 변경 시</text>
     <text class="mono" x="125" y="465">TM1637_DisplayDecimal()</text>

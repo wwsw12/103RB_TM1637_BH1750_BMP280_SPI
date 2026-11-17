@@ -65,8 +65,8 @@
     <line class="rule" x1="105" y1="503" x2="475" y2="503"/>
     <text class="section" x="105" y="531">SUPERLOOP</text>
     <text class="mono" x="105" y="559">while (1) · HAL_GetTick()</text>
-    <text class="mono" x="105" y="587" font-size="15">100 ms · BH1750_ReadLux</text>
-    <text class="mono" x="105" y="615" font-size="15">BMP280_ReadData · 측정값 갱신</text>
+    <text class="mono" x="105" y="587" font-size="15">200 ms · BH1750_ReadLux</text>
+    <text class="mono" x="105" y="615" font-size="15">100 ms · BMP280_ReadData · 측정값 갱신</text>
     <text class="mono" x="105" y="643" font-size="14">압력 변경 시 · TM1637_DisplayDecimal</text>
     <text class="text" x="105" y="671">500 ms · printf 센서 로그</text>
 
