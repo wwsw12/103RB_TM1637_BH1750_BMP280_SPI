@@ -5,6 +5,7 @@
  *          타겟 MCU   : STM32F103RBT6
  *          인터페이스 : SPI1 (PA4=CS, PA5=SCK, PA6=MISO, PA7=MOSI)
  *          SPI 규격   : Mode 3 (CPOL=1, CPHA=1), MSB First, 4-Wire Full-Duplex
+ *                       (BMP280은 Mode 0/3 모두 지원, 디버깅 중 Mode 0 / 1 MHz에서도 동작 확인)
  ******************************************************************************
  */
 
@@ -54,11 +55,18 @@ typedef struct {
 /* 기준 해면기압 상수 (국제 표준 대기압 기본값: 1013.25 hPa) */
 #define BMP280_SEA_LEVEL_HPA     1013.25f
 
+/* 부팅 시 고도 0점 설정 파라미터
+ * Normal 모드 진입 후 첫 측정 결과가 데이터 레지스터(리셋값)를 덮어쓸 때까지 대기
+ * osrs_p x16 / osrs_t x2 측정 시간 max 43.2 ms (데이터시트 Table 13) + 여유
+ * IIR 필터는 첫 측정값으로 초기화되므로 별도 안정화 대기 불필요 (데이터시트 Figure 2) */
+#define BMP280_ZERO_SETTLE_MS    50U
+
 /* 함수 프로토타입 */
 HAL_StatusTypeDef BMP280_Init(SPI_HandleTypeDef *hspi);
 HAL_StatusTypeDef BMP280_ReadData(SPI_HandleTypeDef *hspi, float *temperature, float *pressure, float *altitude);
 void BMP280_SetSeaLevelPressure(float sea_level_hpa);
 float BMP280_GetSeaLevelPressure(void);
+HAL_StatusTypeDef BMP280_ZeroAltitude(SPI_HandleTypeDef *hspi);
 
 #ifdef __cplusplus
 }

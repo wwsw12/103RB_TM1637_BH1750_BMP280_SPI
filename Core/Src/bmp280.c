@@ -6,6 +6,7 @@
  */
 
 #include "bmp280.h"
+#include <stdio.h>
 
 static BMP280_CalibData_t calibData;
 static float current_sea_level_hPa = BMP280_SEA_LEVEL_HPA;
@@ -105,6 +106,15 @@ HAL_StatusTypeDef BMP280_Init(SPI_HandleTypeDef *hspi)
 
     // 1. Chip ID 확인 (0xD0 레지스터에 -> 0x58)
     status = BMP280_SPI_ReadRegs(hspi, BMP280_REG_ID, &chipId, 1);
+    if (status == HAL_OK)
+    {
+        printf("[SPI1] BMP280 chip ID: 0x%02X\r\n", (unsigned int)chipId);
+    }
+    else
+    {
+        printf("[SPI1] BMP280 chip ID read failed: status=%d, spi_error=0x%lX\r\n",
+               (int)status, (unsigned long)HAL_SPI_GetError(hspi));
+    }
     if (status != HAL_OK || chipId != BMP280_CHIP_ID)
     {
         return HAL_ERROR;
@@ -197,6 +207,31 @@ void BMP280_SetSeaLevelPressure(float sea_level_hpa)
 float BMP280_GetSeaLevelPressure(void)
 {
     return current_sea_level_hPa;
+}
+
+/**
+ * @brief  현재 위치를 고도 0 m 기준으로 설정 (부팅 시 1회 호출, 상대 고도)
+ *         현재 기압을 기준 기압으로 쓰면 고도 공식에서 P / P0 = 1 → 고도 0 m
+ *         BMP280_Init() 직후(Normal 모드 진입 직후) 호출해야 함
+ * @param  hspi : SPI 핸들 포인터 (&hspi1)
+ * @retval HAL_StatusTypeDef : 성공 시 HAL_OK (실패 시 기준 기압은 변경하지 않음)
+ */
+HAL_StatusTypeDef BMP280_ZeroAltitude(SPI_HandleTypeDef *hspi)
+{
+    float press = 0.0f;
+
+    // 첫 측정 결과가 데이터 레지스터의 리셋값을 덮어쓸 때까지 대기 (max 43.2 ms + 여유)
+    HAL_Delay(BMP280_ZERO_SETTLE_MS);
+
+    // 센서는 측정 주기(약 106 ms)마다 한 번만 값을 갱신하므로 연속으로 여러 번 읽어도 같은 값 → 1회만 읽음
+    HAL_StatusTypeDef status = BMP280_ReadData(hspi, NULL, &press, NULL);
+    if (status != HAL_OK || press <= 0.0f)
+    {
+        return HAL_ERROR;
+    }
+
+    BMP280_SetSeaLevelPressure(press);
+    return HAL_OK;
 }
 
 /**

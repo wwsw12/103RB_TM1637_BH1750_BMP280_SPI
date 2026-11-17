@@ -35,13 +35,19 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+/* BH1750 조도 읽기 주기
+ * H-Resolution 모드 측정 시간 typ 120 ms / max 180 ms (BH1750FVI 데이터시트 p.2)
+ * → max 180 ms보다 긴 200 ms 주기로 읽어 매번 새 측정값을 받음 */
+#define BH1750_READ_PERIOD_MS    200U
 
+/* BH1750 연속 실패 로그 기준
+ * 일시적인 1~2회 실패는 무시하고, 5회 연속(약 1초) 실패 시 1회만 로그 */
+#define BH1750_FAIL_LOG_COUNT    5U
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
 
-#define LOCAL_SEA_LEVEL_HPA    1023.4f
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -69,14 +75,13 @@ static void MX_SPI1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void __io_putchar(int ch)
+/* printf 출력 리다이렉션 (syscalls.c의 _write()가 1바이트씩 호출)
+ * - 반환형 int: syscalls.c 선언 'extern int __io_putchar(int ch)'과 일치
+ * - 줄바꿈 변환 없음: 모든 printf 문자열이 이미 "\r\n"으로 끝나므로 '\r' 중복 전송 방지 */
+int __io_putchar(int ch)
 {
-	if(ch == '\n')
-	{
-		HAL_UART_Transmit (&huart2, (uint8_t*) "\r", 1, 0xffff);
-	}
-
-	HAL_UART_Transmit (&huart2, (uint8_t*) &ch, 1, 0xffff);
+	HAL_UART_Transmit(&huart2, (uint8_t *)&ch, 1, 0xFFFF);
+	return ch;
 }
 /* USER CODE END 0 */
 
@@ -141,11 +146,20 @@ int main(void)
       BH1750_init_ok = 0;
   }
 
-  // [SPI1] BMP280 기압/온도 센서 초기화 및 현지 해면기압(QNH) 보정 (방안 2)
+  // [SPI1] BMP280 기압/온도 센서 초기화 및 부팅 위치 고도 0점 설정 (상대 고도)
   if (BMP280_Init(&hspi1) == HAL_OK)
   {
-      // 현재 지역의 해면기압(QNH) 설정 -> 실제 해발 고도(m) 계산
-      printf("[SPI1] BMP280 Sensor Initialized! (SeaLevel QNH: %.2f hPa)\r\n", BMP280_GetSeaLevelPressure());
+      printf("[SPI1] BMP280 Sensor Initialized!\r\n");
+
+      // 부팅 직후 첫 측정 기압을 기준 기압으로 설정 -> 부팅 위치 = 고도 0 m
+      if (BMP280_ZeroAltitude(&hspi1) == HAL_OK)
+      {
+          printf("[SPI1] Altitude zeroed at boot position (Ref: %.2f hPa)\r\n", BMP280_GetSeaLevelPressure());
+      }
+      else
+      {
+          printf("[SPI1] Altitude zeroing FAILED! Using default %.2f hPa\r\n", BMP280_GetSeaLevelPressure());
+      }
   }
   else
   {
@@ -167,6 +181,8 @@ int main(void)
 
   uint32_t lastUartTick       = 0;
   uint32_t lastSenseTick      = 0;
+  uint32_t lastLuxTick        = 0;
+  uint32_t luxFailCount       = 0; // BH1750 연속 실패 횟수 (0 = 정상)
   int16_t  lastDisplayedPress = 0; // 초기값 (부팅 후 최초 1회 즉시 표시 보장)
   /* USER CODE END 2 */
 
@@ -176,18 +192,42 @@ int main(void)
   {
       uint32_t currentTick = HAL_GetTick();
 
-      // [작업 1] 100ms 주기: I2C1(BH1750) + SPI1(BMP280) 고속 센싱 및 TM1637 세그먼트 갱신
+      // [작업 1] 200ms 주기: I2C1(BH1750) 조도 읽기 (측정 시간 max 180 ms보다 길게)
+      if (currentTick - lastLuxTick >= BH1750_READ_PERIOD_MS)
+      {
+          lastLuxTick = currentTick;
+
+          // 반환값으로 성공/실패 판정 (실패 시 illuminance는 이전 값 유지)
+          if (BH1750_ReadLux(&hi2c1, &illuminance) == HAL_OK)
+          {
+              // FAILED 로그를 남겼던 경우에만 복구 로그 (비교 후 초기화)
+              if (luxFailCount >= BH1750_FAIL_LOG_COUNT)
+              {
+                  printf("[I2C1] BH1750 read recovered\r\n");
+              }
+              luxFailCount = 0;
+          }
+          else
+          {
+              luxFailCount++;
+              // 정확히 기준 횟수가 되는 순간 1회만 로그 (로그 폭주 방지)
+              if (luxFailCount == BH1750_FAIL_LOG_COUNT)
+              {
+                  printf("[I2C1] BH1750 read FAILED %lu times in a row! Check PB6/PB7 wiring\r\n",
+                         (unsigned long)luxFailCount);
+              }
+          }
+      }
+
+      // [작업 2] 100ms 주기: SPI1(BMP280) 센싱 및 TM1637 세그먼트 갱신
       if (currentTick - lastSenseTick >= 100)
       {
           lastSenseTick = currentTick;
 
-          // 1. I2C1에서 BH1750 조도(Lux) 읽기
-          BH1750_ReadLux(&hi2c1, &illuminance);
-
-          // 2. SPI1에서 BMP280 온도, 기압, 고도 읽기
+          // 1. SPI1에서 BMP280 온도, 기압, 고도 읽기
           if (BMP280_ReadData(&hspi1, &temperature, &pressure, &altitude) == HAL_OK)
           {
-              // 3. 기압 정수값이 변경되었을 때만 TM1637 7세그먼트 화면 갱신 (Dirty Check)
+              // 2. 기압 정수값이 변경되었을 때만 TM1637 7세그먼트 화면 갱신 (Dirty Check)
               int16_t press_int = (int16_t)(pressure + 0.5f);
               if (press_int != lastDisplayedPress)
               {
@@ -197,12 +237,12 @@ int main(void)
           }
       }
 
-      // [작업 2] 500ms 주기: PC 테라텀 UART 시리얼 출력 (소비)
+      // [작업 3] 500ms 주기: PC 테라텀 UART 시리얼 출력 (소비)
       if (currentTick - lastUartTick >= 500)
       {
           lastUartTick = currentTick;
 
-          // 센서 통신 없이, 100ms 블록이 갱신해 둔 최신 센서 변수들을 PC로 출력
+          // 센서 통신 없이, 200ms/100ms 블록이 갱신해 둔 최신 센서 변수들을 PC로 출력
           printf("[ALL SENSORS] Lux: %6.1f lx | Temp: %6.3f C | Press: %8.3f hPa | Altitude: %6.3f m\r\n",
                  illuminance, temperature, pressure, altitude);
       }
@@ -386,7 +426,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : TM1637_CLK_Pin */
   GPIO_InitStruct.Pin = TM1637_CLK_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(TM1637_CLK_GPIO_Port, &GPIO_InitStruct);

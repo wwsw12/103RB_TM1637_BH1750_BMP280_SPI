@@ -3,8 +3,8 @@
  * @file    tm1637.h
  * @brief   TM1637 4자리 7세그먼트 LED 드라이버 헤더 파일
  *          타겟 MCU   : STM32F103RBT6
- *          핀 연결    : CLK -> PB8 (Push-Pull, No-Pull)
- *                       DIO -> PB9 (Open-Drain, Pull-up)
+ *          핀 연결    : CLK -> PB8 (Open-Drain, 모듈 10k 풀업으로 5V High)
+ *                       DIO -> PB9 (Open-Drain, 모듈 10k 풀업으로 5V High)
  ******************************************************************************
  */
 
