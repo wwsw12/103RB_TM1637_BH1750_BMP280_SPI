@@ -138,7 +138,7 @@
 | [03_cubemx_configuration.md](docs/03_cubemx_configuration.md) | RCC/GPIO/I2C/SPI/UART/SysTick 설정과 계산 |
 | [04_firmware_implementation.md](docs/04_firmware_implementation.md) | 핵심 코드, HAL → 레지스터 추적 |
 | [05_troubleshooting.md](docs/05_troubleshooting.md) | 실제 디버깅 사례 2건(SPI 오배선, 고도 기준값), 설계 대응, 발견 이슈 |
-| [06_testing_and_results.md](docs/06_testing_and_results.md) | 검증 매트릭스(R1~R9), 고장 주입 3건, 레지스터·멀티미터 확인, 리소스, 한계 |
+| [06_testing_and_results.md](docs/06_testing_and_results.md) | 검증 매트릭스(R1~R8), 고장 주입 3건, 레지스터·멀티미터 확인, 리소스, 한계 |
 
 ## 10. 소스 구성
 
