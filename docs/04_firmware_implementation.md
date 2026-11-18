@@ -168,7 +168,7 @@ HAL_StatusTypeDef BMP280_ZeroAltitude(SPI_HandleTypeDef *hspi)
 | 설계 값 | 근거 |
 |---|---|
 | 50 ms 대기 | ×16 / ×2 오버샘플링 측정 시간 max 43.2 ms (BMP280 데이터시트 Table 13, p.18) + 여유 |
-| IIR 안정화 대기 없음 | 필터는 첫 측정값으로 초기화됨 (BMP280 데이터시트 3.3.3절 p.13–14) |
+| IIR 안정화 대기 없음 | 필터는 첫 측정값으로 초기화됨 (BMP280 데이터시트 3.3절 Figure 2, p.12) |
 | 1회만 읽음 | 측정 주기(약 106 ms) 안에서 여러 번 읽어도 같은 값 → 평균 효과 없음 |
 
 `main.c`에서는 `BMP280_Init()` 성공 직후 한 번 호출하고, 결과를 UART에 출력합니다 (`Altitude zeroed at boot position (Ref: …)`). 초기화 중에는 Chip ID 값도 출력해 배선 문제를 바로 구분할 수 있게 했습니다 (`[SPI1] BMP280 chip ID: 0x58`).

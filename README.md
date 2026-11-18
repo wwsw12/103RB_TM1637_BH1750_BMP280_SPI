@@ -97,7 +97,7 @@
 |:---:|:---:|:---:|
 | <img src="docs/images/troubleshooting/05_scope_cs_vs_sck.jpg" width="260"> | <img src="docs/images/troubleshooting/08_nucleo_cn10_solder_bridges.png" width="300"> | <img src="docs/images/troubleshooting/09_scope_after_fix_1.jpg" width="260"> |
 
-**② 책상 위에서 고도 −42.7 m** · 로그 기압을 공식에 직접 넣어 같은 값 재현 → 계산은 정상, 기준 기압이 1013.25 hPa 기본값 → 부팅 시 첫 측정(max 43.2 ms → 50 ms 대기)을 기준으로 0점 설정 → 위 그래프처럼 0 m에서 시작
+**② 책상 위에서 고도 −42.7 m** · 로그 기압을 공식에 직접 넣어 같은 값 재현 → 계산은 정상, 기준 기압이 1013.25 hPa 기본값 → 부팅 시 첫 측정(max 43.2 ms → 50 ms 대기)을 기준으로 0점 설정 → ③ 고도 데모의 '다른 측정' 그래프처럼 0 m에서 시작
 
 → 디버깅 과정, 측정 사진, 리뷰 이슈: [05_troubleshooting.md](docs/05_troubleshooting.md)
 
@@ -109,7 +109,7 @@
 | **멀티미터: TM1637 CLK High 4.909 V** | **멀티미터: NUCLEO 5V 4.886 V** | **멀티미터: GY-302 풀업 SCL–SDA 9.387 kΩ** |
 | <img src="docs/images/testing/05_multimeter_tm1637_clk.jpg" width="200"> | <img src="docs/images/testing/06_multimeter_nucleo_5v.jpg" width="200"> | <img src="docs/images/testing/09_multimeter_gy302_scl_sda.jpg" width="200"> |
 
-<sub>UART 출력 간격 실측 평균 500.42 ms (타임스탬프 로그 316개 간격) · USART2 `BRR = 0x116` · 레지스터 값은 모두 RM0008 기준 계산값과 일치</sub>
+<sub>UART 출력 간격 실측 평균 500.42 ms (타임스탬프 로그 316개 간격) · 레지스터 값은 모두 RM0008 기준 계산값과 일치</sub>
 
 → 검증 매트릭스(R1~R8), 합격 기준, 원본 로그: [06_testing_and_results.md](docs/06_testing_and_results.md)
 

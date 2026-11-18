@@ -1,7 +1,7 @@
 # 03. STM32CubeMX 및 MCU 주변장치 설정
 
 > [main.c](../Core/Src/main.c) (`MX_*_Init`, `SystemClock_Config`), [stm32f1xx_hal_msp.c](../Core/Src/stm32f1xx_hal_msp.c)
->  **RCC, GPIO, I2C1, SPI1, USART2**.
+> 다루는 범위: **RCC, GPIO, I2C1, SPI1, USART2**
 
 ## 0. 초기화 순서 (`main()`)
 
