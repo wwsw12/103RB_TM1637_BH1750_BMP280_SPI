@@ -64,7 +64,7 @@
 - **데이터시트** (BH1750FVI p.7): ADDR = 'L'일 때 슬레이브 주소는 `0100011`(= 0x23)입니다.
 - 주소 바이트: 7-bit `0x23` → HAL 규약상 `0x23 << 1 = 0x46` 전달 (HAL이 R/W 비트를 OR).
 - 통신: `Power On(0x01)` → `Continuous H-Res Mode(0x10)` 전송 후, 매 읽기마다 2바이트 수신.
-- **데이터시트** (BH1750FVI p.2): I2C SCL 최대 400 kHz → 100 kHz 설정은 범위 안. H-Resolution 측정 시간은 typ 120 ms / max 180 ms → 조도는 max보다 긴 **200 ms 주기**로 읽습니다 (`main.c` `BH1750_READ_PERIOD_MS`, [05_troubleshooting.md](05_troubleshooting.md) 4장 5번).
+- **데이터시트** (BH1750FVI p.2): I2C SCL 최대 400 kHz → 100 kHz 설정은 범위 안. H-Resolution 측정 시간은 typ 120 ms / max 180 ms → 조도는 max보다 긴 **200 ms 주기**로 읽습니다 (`main.c` `BH1750_READ_PERIOD_MS`, [05_troubleshooting.md](05_troubleshooting.md) 4장 4번).
 - ADDR 연결은 회로도의 J1(4핀)에는 그려져 있지 않습니다. 회로도 갱신 시 ADDR → GND를 추가하는 것을 권장합니다.
 
 ### 3-2. SPI1 — BMP280 (GY-BMP280)
@@ -134,8 +134,8 @@ TM1637만 5 V로 동작하고 MCU는 3.3 V이므로, 이 구간은 레벨 호환
 | 적용: CLK Open-Drain | CLK(PB8)도 DIO처럼 **Open-Drain**으로 변경했습니다. High는 모듈 회로도의 R1 10 kΩ 풀업이 5 V로 만들어 V<sub>IH</sub>(3.5 V)를 만족하고, 풀업 → MCU로 흐르던 전류도 없어집니다. 상승 시간 5τ = 5 µs로 25 µs 지연 안에 충분히 올라갑니다. PB8은 FT 핀이고 출력 모드라 내부 풀업이 꺼져 있어 FT 사용 조건도 만족합니다. (다른 방법인 TM1637 3.3 V 구동은 데이터시트 VDD 범위 5 V ± 10% 밖이라 제외) |
 
 > Push-Pull 구성에서도 동작은 했지만(배선 사진의 `1018` 표시) CLK High 레벨은 사양 여유가 없는 구간이었습니다.
-> - NUCLEO 5V 핀의 실제 전압은 USB 전원에 따라 5 V보다 조금 낮을 수 있고, 그만큼 V<sub>IH</sub>도 낮아집니다. 멀티미터로 5V 핀 전압을 재 두면 계산 근거가 됩니다.
-> - 이 항목은 [05_troubleshooting.md](05_troubleshooting.md) 4장 6번에 정리했고, Open-Drain으로 수정했습니다. 수정 후에도 7-segment 표시가 정상 동작함을 보드에서 확인했습니다.
+> - 멀티미터 실측: NUCLEO 5V 핀 **4.886 V** → V<sub>IH</sub> = 0.7 × 4.886 = **3.42 V**. Push-Pull의 3.3 V High는 이보다 0.12 V 낮았고, Open-Drain 변경 후 CLK High는 **4.909 V**로 측정됐습니다 ([06_testing_and_results.md](06_testing_and_results.md) 2-4절).
+> - 이 항목은 [05_troubleshooting.md](05_troubleshooting.md) 4장 5번에 정리했고, Open-Drain으로 수정했습니다. 수정 후에도 7-segment 표시가 정상 동작함을 보드에서 확인했습니다.
 
 ## 5. 부품 사용 이유 (일반 원리 vs 프로젝트 확인)
 

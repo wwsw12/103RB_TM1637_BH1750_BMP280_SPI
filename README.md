@@ -98,18 +98,29 @@
 | **원인** | 기준 기압이 기본값 1013.25 hPa로 남아 있음 (측정 기압이 더 높아 음수). 현지 기준값 상수는 정의만 되고 호출되지 않음 |
 | **해결** | 부팅 직후 첫 측정 완료(데이터시트 max 43.2 ms → 50 ms 대기)를 기다려 그 기압을 기준으로 설정 → **부팅 위치 = 0 m 상대 고도** |
 
-이 밖에 설계 단계에서 대응한 문제 4건과, 소스·데이터시트 리뷰와 보드 테스트로 찾은 이슈 6건을 정리했습니다. 이 중 4건을 코드로 수정했습니다.
+이 밖에 설계 단계에서 대응한 문제 4건과, 소스·데이터시트 리뷰와 보드 테스트로 찾은 이슈 5건을 정리했습니다. 이 중 4건을 코드로 수정했습니다.
 - 데이터시트 근거: BH1750 읽기 주기 200 ms, TM1637 CLK 3.3 V 구동이 V<sub>IH</sub> 3.5 V에 못 미쳐 Open-Drain으로 변경
 - 코드 리뷰: BH1750 읽기 실패 감지(연속 실패 카운터), `printf` 줄바꿈 `\r` 중복 제거
-- 미해결: I2C 선을 뺐다 꽂으면 BUSY 잠금으로 조도 읽기가 복구되지 않음 (원인 분석과 복구 절차만 정리)
 
 → 전체 디버깅 과정과 측정 사진: [05_troubleshooting.md](docs/05_troubleshooting.md)
 
 ## 8. 테스트 및 결과
 
-- 빌드 산출물(`Debug/*.elf`, `*.map`)에서 확인된 메모리 사용량: **Flash ≈ 37.7 KiB / 128 KiB, 정적 RAM(.data+.bss) ≈ 1.1 KiB / 20 KiB**
-  - ⚠ 해당 ELF 생성일(2026-09-18)이 `main.c`/`bmp280.c` 최종 수정일(2026-10-13)보다 앞서므로, **최신 소스 기준 수치가 아닐 수 있습니다.** 재빌드 후 갱신 필요.
-- 실기 동작 로그, 정확도 비교, 타이밍 실측 자료는 **프로젝트에 없어 성공을 주장하지 않았습니다.** → [06_testing_and_results.md](docs/06_testing_and_results.md)
+요구사항마다 합격 기준을 정하고 보드에서 검증했습니다. 모든 결과에 로그·사진·레지스터 캡처 증거를 붙였습니다.
+
+| 구분 | 결과 | 근거 |
+|---|---|---|
+| 센서 통신 | BMP280 Chip ID `0x58`, 고도 들어 올림 **+1.176 m** / 내림 **−0.629 m**, 조도 0.0 ~ 140.8 lx | Tera Term 로그 |
+| 자가진단 | 정상 부팅 `TEST` → `GOOD` → 기압, BMP280 전원 분리 시 `TEST` → `ERR ` | 영상 캡처 |
+| 주기 스케줄링 | UART 출력 간격 평균 **500.42 ms** (316개 간격, 표준편차 2.1 ms) | 타임스탬프 로그 원본 |
+| 레벨 호환 | 5V 핀 4.886 V → V<sub>IH</sub> 3.42 V, Open-Drain CLK High **4.909 V** (Push-Pull 3.3 V는 부족) | 멀티미터 |
+| 주변장치 설정 | `SPI1->CR1` 0x357, `I2C1->CCR` 0xA0, `TRISE` 0x21, `USART2->BRR` 0x116 → 계산값과 모두 일치 | 디버거 SFR |
+| 고장 주입 | SPI 오배선 → `ERR `, BMP280 전원 분리 → `ERR `, 동작 중 I2C 선 분리 → `FAILED` 로그 1회 | 로그·사진 |
+| 리소스 | Flash **38.5 KiB / 128 KiB (30.1 %)**, RAM **2.6 KiB / 20 KiB (13.0 %, Heap·Stack 포함)** | 최신 빌드 ELF |
+
+<img src="docs/images/testing/01_selftest_good.jpg" width="640">
+
+→ 검증 매트릭스와 전체 증거: [06_testing_and_results.md](docs/06_testing_and_results.md)
 
 ## 9. 상세 문서
 
@@ -120,7 +131,7 @@
 | [03_cubemx_configuration.md](docs/03_cubemx_configuration.md) | RCC/GPIO/I2C/SPI/UART/SysTick 설정과 계산 |
 | [04_firmware_implementation.md](docs/04_firmware_implementation.md) | 핵심 코드, HAL → 레지스터 추적 |
 | [05_troubleshooting.md](docs/05_troubleshooting.md) | 실제 디버깅 사례 2건(SPI 오배선, 고도 기준값), 설계 대응, 발견 이슈 |
-| [06_testing_and_results.md](docs/06_testing_and_results.md) | 검증 현황, 한계, 개선 사항 |
+| [06_testing_and_results.md](docs/06_testing_and_results.md) | 검증 매트릭스(R1~R9), 고장 주입 3건, 레지스터·멀티미터 확인, 리소스, 한계 |
 
 ## 10. 소스 구성
 
@@ -129,5 +140,3 @@
 | 사용자 작성 | [bh1750.c](Core/Src/bh1750.c), [bmp280.c](Core/Src/bmp280.c), [tm1637.c](Core/Src/tm1637.c) 및 헤더, `main.c`의 `USER CODE` 영역 | 개발자 |
 | CubeMX 생성 | `main.c` 나머지(`MX_*_Init`, `SystemClock_Config`), [stm32f1xx_hal_msp.c](Core/Src/stm32f1xx_hal_msp.c), [stm32f1xx_it.c](Core/Src/stm32f1xx_it.c) | ST 도구 |
 | ST 제공 라이브러리 | `Drivers/STM32F1xx_HAL_Driver`, `Drivers/CMSIS` | ST |
-
-> 배선 사진, 터미널 캡처, 로직 분석기 파형 등 보조 이미지는 아직 없습니다.
