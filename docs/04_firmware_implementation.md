@@ -1,5 +1,27 @@
 # 04. 핵심 펌웨어 구현 및 동작 원리
 
+## 0. 핵심 구현 요약
+
+1. **주기 분리 Super-loop** — `HAL_GetTick()` 차분으로 100 ms BMP280 센싱 / 200 ms BH1750 조도(측정 시간 max 180 ms 반영) / 500 ms UART 출력. `HAL_Delay()`는 부팅 시에만 사용 (`main.c`)
+
+2. **BMP280 보정 파이프라인** — 온도 계산으로 `t_fine`을 먼저 산출해야 기압 보정이 가능한 의존성을 코드 순서로 반영 (`bmp280.c: BMP280_ReadData`)
+
+3. **SPI 레지스터 접근 규약** — Read는 주소 bit7=1, Write는 bit7=0, CS를 소프트웨어(GPIO)로 제어 (`BMP280_SPI_ReadRegs/WriteReg`)
+
+4. **TM1637 비트뱅잉** — LSB-first 8bit 전송 + 9번째 클럭 ACK 샘플링. CLK·DIO를 모두 Open-Drain으로 두고 High는 모듈의 5 V 풀업이 만들게 하여, ACK 입력 시 핀 충돌을 막고 TM1637 V<sub>IH</sub>(3.5 V)를 만족 (`tm1637.c`, [02_hardware.md](02_hardware.md) 4-1절)
+
+5. **불필요한 버스 트랜잭션 제거** — 기압 정수값이 바뀔 때만 TM1637 갱신, UART는 캐시된 값 출력
+
+### 소스 구성
+
+| 구분 | 파일 | 작성 주체 |
+|---|---|---|
+| 사용자 작성 | [bh1750.c](../Core/Src/bh1750.c), [bmp280.c](../Core/Src/bmp280.c), [tm1637.c](../Core/Src/tm1637.c) 및 헤더, `main.c`의 `USER CODE` 영역 | 개발자 |
+| CubeMX 생성 | `main.c` 나머지(`MX_*_Init`, `SystemClock_Config`), [stm32f1xx_hal_msp.c](../Core/Src/stm32f1xx_hal_msp.c), [stm32f1xx_it.c](../Core/Src/stm32f1xx_it.c) | ST 도구 |
+| ST 제공 라이브러리 | `Drivers/STM32F1xx_HAL_Driver`, `Drivers/CMSIS` | ST |
+
+### 기능별 위치
+
 범례: 🟢 사용자 작성 코드 / 🔵 CubeMX 생성 코드 / ⚪ ST HAL (수정하지 않음)
 
 | 기능 | 파일 / 함수 | 구분 |

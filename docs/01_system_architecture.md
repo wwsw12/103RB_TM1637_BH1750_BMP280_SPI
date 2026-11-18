@@ -2,6 +2,39 @@
 
 > 파일: [main.c](../Core/Src/main.c), [bh1750.c](../Core/Src/bh1750.c), [bmp280.c](../Core/Src/bmp280.c), [tm1637.c](../Core/Src/tm1637.c), [stm32f1xx_hal_msp.c](../Core/Src/stm32f1xx_hal_msp.c), [stm32f1xx_it.c](../Core/Src/stm32f1xx_it.c), [syscalls.c](../Core/Src/syscalls.c), [.ioc](../p116.103RB_TM1637_BH1750_BMP280_SPI.ioc)
 
+## 0. 개요
+
+### 0-1. 개발 목적 및 해결하려는 문제
+
+| 목적 | 구현 방식 |
+|---|---|
+| 서로 다른 3종 인터페이스(I2C / SPI / TM1637 2선식 독자 프로토콜)를 한 MCU에서 통합 | 센서별 드라이버 분리 (`bh1750.c`, `bmp280.c`, `tm1637.c`) |
+| 데이터시트 기반 센서 구동 (레지스터 맵, 보정식) | BMP280 NVM 보정계수(24B) 읽기 + 데이터시트 8.1 보정식(double) 구현 |
+| 전용 HW 주변장치가 없는 장치(TM1637) 제어 | GPIO + 소프트웨어 지연으로 Start/Stop/Write/ACK 직접 구현 |
+| 센싱·표시·로깅 주기 분리 | `HAL_GetTick()` 기반 주기 스케줄링 (BMP280 100 ms / BH1750 200 ms / UART 500 ms). 스케줄러는 `HAL_Delay()` 없이 non-blocking, 각 통신 호출은 blocking HAL |
+
+### 0-2. 주요 구현 기능
+
+- **BH1750 (I2C1, 0x23)**: 존재 확인 → Power On → Continuous H-Resolution 모드 → 2바이트 수신 후 `lux = raw / 1.2`
+- **BMP280 (SPI1, Mode 3, 8 MHz)**: Chip ID(0x58) 검증 → Soft reset → 보정계수 로드 → 오버샘플링/IIR/Normal 모드 설정 → 온도·기압·고도 계산
+- **TM1637 (PB8/PB9 비트뱅잉)**: 4-digit 표시, 폰트 테이블, 문자열("TEST"/"GOOD"/"ERR "), 기압 정수값 변경 시에만 갱신
+- **부팅 시 고도 0점**: BMP280 첫 측정 완료(max 43.2 ms → 50 ms 대기)를 기다려 그 기압을 기준으로 설정 → 부팅 위치 = 0 m 상대 고도
+- **BH1750 장애 감지**: 읽기 반환값 검사 + 연속 실패 카운터. 5회 연속(약 1초) 실패 시 로그 1회, 복구 시 로그 1회
+- **UART printf 리다이렉션**: `__io_putchar()` → `HAL_UART_Transmit()` (USART2)
+- **부팅 시 자가 진단 표시**: 두 센서 초기화 성공 시 `GOOD`, 실패 시 `ERR ` 표시
+
+### 0-3. 개발 환경 및 사용 기술
+
+| 항목 | 내용 |
+|---|---|
+| 보드 | NUCLEO-F103RB (MB1136 rev C), ST-LINK/V2-1 내장 |
+| MCU | STM32F103RBT6 (Cortex-M3, Flash 128 KB, RAM 20 KB) |
+| 클럭 | HSI/2 × PLL16 = **64 MHz**|
+| IDE | STM32CubeIDE 2.1.1 |
+| 펌웨어 패키지 | STM32Cube FW_F1 V1.8.7 (HAL) |
+| 방식 | 베어메탈 super-loop. 스케줄링은 `HAL_GetTick()` 기반 non-blocking, 통신은 폴링(blocking HAL) |
+| 검증 도구 | Tera Term (타임스탬프 로그), Agilent DSO3152A 오실로스코프, 디지털 멀티미터, CubeIDE 디버거(SFR 뷰) |
+
 ## 1. 시스템 구성 요소
 
 | 구성 요소 | 역할 | 인터페이스 | 데이터 방향 |
