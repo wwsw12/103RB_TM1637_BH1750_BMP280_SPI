@@ -15,11 +15,9 @@
 <tr>
 <td width="50%"><img src="docs/images/readme/hero_setup.jpg" width="100%"></td>
 <td width="50%">
-<img src="docs/images/readme/boot_good.gif" width="100%"><br>
-<sub>RESET → <code>TEST</code> → <code>GOOD</code> → 기압 <code>1015</code> hPa</sub>
-<br><br>
-<img src="docs/images/readme/boot_err.gif" width="100%"><br>
-<sub>BMP280 전원을 뺀 채 RESET → <code>TEST</code> → <code>ERR</code> (부팅 자가진단 실패 표시)</sub>
+<img src="docs/images/readme/boot_good_err.gif" width="100%"><br>
+<sub>부팅 자가진단 — 위: 정상 RESET → <code>TEST</code> → <code>GOOD</code> → 기압 <code>1015</code> hPa<br>
+아래: BMP280 전원을 뺀 채 RESET → <code>TEST</code> → <code>ERR</code> (두 영상을 <code>TEST</code> 시점에 맞춰 합침)</sub>
 </td>
 </tr>
 </table>
