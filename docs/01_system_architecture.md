@@ -40,7 +40,7 @@
 | 100 ms | `BMP280_ReadData(&hspi1, &temperature, &pressure, &altitude)` 성공 시 압력 반올림값 비교 | 성공한 경우 온도·기압·고도 갱신. 반올림 압력이 `lastDisplayedPress`와 다를 때만 `TM1637_DisplayDecimal()` 호출 |
 | 500 ms | `printf("[ALL SENSORS] ...")` → `_write` → `__io_putchar` → `HAL_UART_Transmit` | 센서 통신 없이 Application에 저장된 최신 측정값을 USART2로 출력 |
 
-루프마다 `HAL_GetTick()`을 한 번 읽고, 센싱 조건을 먼저 검사한 다음 UART 출력 조건을 검사합니다. 두 조건이 같은 반복에서 모두 참이면 UART는 해당 반복에서 갱신된 값을 출력합니다. BMP280 읽기가 실패하면 출력 인자는 갱신되지 않아 이전 측정값이 유지됩니다.
+루프마다 `HAL_GetTick()`을 한 번 읽고, BH1750(200 ms) → BMP280(100 ms) → UART(500 ms) 순서로 주기 조건을 검사합니다. 여러 조건이 같은 반복에서 참이면 UART는 해당 반복에서 갱신된 값을 출력합니다. BMP280 읽기가 실패하면 출력 인자는 갱신되지 않아 이전 측정값이 유지됩니다.
 
 ## 4. 소프트웨어 모듈 역할
 
@@ -48,5 +48,5 @@
 |---|---|---|---|
 | 애플리케이션 | `main.c` (USER CODE) | — | 스케줄링, 상태 표시, `__io_putchar` |
 | BH1750 드라이버 | `bh1750.c/.h` | `BH1750_Init`, `BH1750_ReadLux` | HAL I2C 위에 구현 |
-| BMP280 드라이버 | `bmp280.c/.h` | `BMP280_Init`, `BMP280_ReadData`, `Set/GetSeaLevelPressure` | 보정계수를 `static`으로 보관 |
+| BMP280 드라이버 | `bmp280.c/.h` | `BMP280_Init`, `BMP280_ReadData`, `BMP280_ZeroAltitude`, `Set/GetSeaLevelPressure` | 보정계수를 `static`으로 보관. 부팅 시 `ZeroAltitude`로 기준 기압 설정 |
 | TM1637 드라이버 | `tm1637.c/.h` | `TM1637_Init/Clear/DisplayRaw/DisplayDecimal/DisplayFloat/DisplayString/SetBrightness/DisplayOn/Off` | 비트뱅잉 |

@@ -116,8 +116,17 @@ TM1637의 2선 프로토콜은 I2C와 비슷한 Start/Stop/ACK 형태이나 **I2
 | BH1750 / BMP280 전원 | 3.3 V | 회로도 J1-1, J2-1 — **확인** |
 | TM1637 전원 | 5 V (NUCLEO 보드 5V 핀에서 공급) | 회로도 J3-1, 개발자 확인 — **확인** |
 | MCU ↔ 센서 로직 레벨 | 3.3 V ↔ 3.3 V | 같은 전원 레일 사용 — **확인** |
-| I2C 풀업 저항 | GY-302 모듈 내장 풀업 사용 (MCU 내부 풀업 미설정) | 모듈 구성은 **일반 사양**, 저항값은 **확인 필요** |
+| I2C 풀업 저항 | GY-302 모듈 내장 풀업 사용 (MCU 내부 풀업 미설정) | **실측**: 전원을 끄고 모듈만 분리해 SCL–SDA 사이 저항 **9.387 kΩ** → 두 풀업이 같은 내부 3.3 V 노드에 연결되어 있으므로 1개당 약 **4.7 kΩ** (아래 사진). GY-302 회로도는 자료 폴더에 없음 |
 | TM1637 모듈 RC 필터 | CLK/DIO 라인에 풀업 저항 + 소용량 커패시터 | **모듈 회로도** (CATALEX 4-Digit Display v0.9b, `datasheet/SZH-LD5112/4-Digit Display v0.9b schematic.pdf`): CLK·DIO 각각 R1/R2 **10 kΩ → VCC**, C3/C4 **100 pF → GND**. 칩 **데이터시트** 권장 회로(TM1637 p.13)와 같은 값. 시정수 τ = 1 µs, 5τ = 5 µs → `tm1637.c`의 25 µs 지연은 충분히 김 — **확인** (모듈 회로도 기준) |
+
+**GY-302 I2C 풀업 저항 측정 방법**
+
+| 측정 | 결과 | 해석 |
+|---|---|---|
+| VCC 핀 ↔ SDA/SCL 핀 | 15.97 MΩ (사실상 개방) | 모듈의 풀업은 VCC 핀이 아니라 **온보드 3.3 V 레귤레이터 출력**에 연결되는 구조로 판단 (일반 GY-302 구성 — 모듈 회로도 미보유). 전원이 꺼진 레귤레이터를 거치므로 저항이 잡히지 않음 |
+| SCL ↔ SDA | **9.387 kΩ** | SCL 풀업 + SDA 풀업이 직렬 (R + R) → R ≈ **4.69 kΩ ≈ 4.7 kΩ** |
+
+<img src="images/testing/09_multimeter_gy302_scl_sda.jpg" width="300">
 
 ### 4-1. TM1637 5 V 구동과 3.3 V MCU의 레벨 차이
 
@@ -150,7 +159,7 @@ TM1637만 5 V로 동작하고 MCU는 3.3 V이므로, 이 구간은 레벨 호환
 
 ## 6. 외부 회로 검증 결과
 
-> 실제 보드 동작 결과(Tera Term 로그, 7-segment 표시)는 [06_testing_and_results.md](06_testing_and_results.md)에, 파형·전압 측정이 필요한 항목(TM1637 CLK High 레벨 등)은 [05_troubleshooting.md](05_troubleshooting.md)에 정리합니다.
+> 실제 보드 동작 결과(Tera Term 로그, 7-segment 표시, 멀티미터 전압, 디버거 레지스터 값)는 [06_testing_and_results.md](06_testing_and_results.md)에, SPI 오배선 디버깅 파형은 [05_troubleshooting.md](05_troubleshooting.md)에 정리했습니다.
 
 - [x] BH1750 / BMP280 동작 전압 3.3 V, TM1637 5 V (회로도로 확인)
 - [x] BH1750 ADDR 핀 → GND, 주소 0x23 (개발자 확인)
@@ -160,3 +169,7 @@ TM1637만 5 V로 동작하고 MCU는 3.3 V이므로, 이 구간은 레벨 호환
 - [x] PB8/PB9가 5 V tolerant 핀 (STM32F103 데이터시트)
 - [x] PB9를 5 V 풀업에 연결해도 FT 조건을 만족 (F1 출력 모드는 내부 풀업 OFF — RM0008)
 - [x] TM1637 V<sub>IH</sub> = 0.7 × VDD (TM1637 데이터시트)
+- [x] TM1637 모듈 CLK/DIO 풀업 10 kΩ, 100 pF (모듈 회로도)
+- [x] NUCLEO 5V 핀 4.886 V, Open-Drain CLK High 4.909 V (멀티미터 실측)
+- [x] SPI1·I2C1·USART2 레지스터 값이 계산값과 일치 (디버거 SFR)
+- [x] GY-302 I2C 풀업 약 4.7 kΩ (SCL–SDA 9.387 kΩ, 멀티미터 실측)

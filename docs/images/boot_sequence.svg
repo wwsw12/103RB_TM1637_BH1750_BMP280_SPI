@@ -84,7 +84,7 @@
     <text class="role" x="1045" y="509">기압 센서 초기화</text>
     <text class="mono" x="1045" y="545">BMP280_Init(&amp;hspi1)</text>
     <text class="small" x="1045" y="574">Chip ID · reset · calibration · config</text>
-    <text class="small" x="1045" y="597">성공 시 QNH 조회 · 초기화 결과를 UART 출력</text>
+    <text class="small" x="1045" y="597">성공 시 고도 0점 설정 · 초기화 결과를 UART 출력</text>
 
     <polygon class="branch" points="1270,655 1420,715 1270,775 1120,715"/>
     <text class="body" x="1270" y="710" text-anchor="middle">BH1750_init_ok</text>
@@ -105,6 +105,6 @@
 
   <rect class="group" x="50" y="925" width="1820" height="95" rx="10"/>
   <text class="role" x="80" y="964">공통 후속 단계</text>
-  <text class="body" x="285" y="964">GOOD / ERR 표시 후 HAL_Delay(300 ms) → lastUartTick · lastSenseTick = 0 초기화 → while (1)</text>
+  <text class="body" x="285" y="964">GOOD / ERR 표시 후 HAL_Delay(300 ms) → 주기 변수 · 실패 카운터 = 0 초기화 → while (1)</text>
   <text class="small" x="80" y="994">센서 초기화 실패는 Error_Handler()로 중단하지 않으며, 초기화 결과를 로그·표시기로 알린 뒤 실행을 계속합니다.</text>
 </svg>

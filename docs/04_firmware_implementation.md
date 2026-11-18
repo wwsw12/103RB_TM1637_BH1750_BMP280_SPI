@@ -54,10 +54,11 @@ if (currentTick - lastUartTick >= 500) {
 ```
 
 **설계 의도**
-- UART 출력(약 90바이트 ≈ 이론 7.8 ms blocking)이 센서 읽기를 지연시키지 않도록 로그는 *캐시된 값*만 출력.
+- UART 출력(약 91바이트 ≈ 이론 7.9 ms blocking)이 센서 읽기를 지연시키지 않도록 로그는 *캐시된 값*만 출력.
 - TM1637 갱신은 대기압의 숫자가 바뀔때만 변경됨.
 - BH1750은 측정 시간(max 180 ms)보다 짧게 읽으면 같은 값을 다시 읽게 되므로, 조도만 200 ms 주기로 분리.
 - BH1750 읽기 실패는 **연속 실패 카운터**로 판정: 일시적인 1~2회 실패는 무시하고, 5회 연속(약 1초) 실패한 순간(`==`)에만 로그 1줄, 복구 시 1줄. 실패마다 찍으면 초당 5줄이 쏟아져 센서 로그가 묻히고 blocking UART 전송으로 루프도 느려지기 때문.
+
 ---
 
 ## 2. BMP280 SPI 드라이버
@@ -95,11 +96,11 @@ BMP280_CS_High();
 
 | 순서 | 동작 | 값 |
 |---|---|---|
-| 1 | `ID(0xD0)` 읽기 → 0x58 아니면 `HAL_ERROR` | `BMP280_CHIP_ID` |
+| 1 | `ID(0xD0)` 읽기 → 읽은 값을 UART에 출력 → 0x58 아니면 `HAL_ERROR` | `BMP280_CHIP_ID` (BMP280 데이터시트 4.3.1절 p.24) |
 | 2 | `RESET(0xE0) ← 0xB6`, `HAL_Delay(10)` | soft reset |
 | 3 | `0x88`부터 24바이트 → `dig_T1..T3`, `dig_P1..P9` | little-endian 파싱 |
-| 4 | `CONFIG(0xF5) ← 0x28` | t_sb = 001b(코드 주석: 62.5 ms), filter = 010b(주석: 4) |
-| 5 | `CTRL_MEAS(0xF4) ← 0x57` | osrs_t=010b(×2), osrs_p=101b(×16), mode=11b(Normal) |
+| 4 | `CONFIG(0xF5) ← 0x28` | t_sb = 001b → 62.5 ms (BMP280 데이터시트 Table 11, p.17), filter = 010b → 계수 4 (Table 6, p.14) |
+| 5 | `CTRL_MEAS(0xF4) ← 0x57` | osrs_t=010b(×2), osrs_p=101b(×16), mode=11b(Normal) (Table 21·22, p.25–26). 이 조합은 데이터시트 Table 7(p.14)의 "handheld device low-power" 권장 설정 (ODR 10 Hz, RMS 잡음 4.0 cm) |
 
 ### 2-4. HAL → 레지스터 → 신호 추적 (`HAL_SPI_Transmit`, `stm32f1xx_hal_spi.c:795`)
 
@@ -123,7 +124,32 @@ float press_val = BMP280_Compensate_Pressure(adc_P);     // t_fine 사용 → �
 ```
 
 - 보정식: 데이터시트 부동소수점(double) 버전 (코드 주석 "데이터시트 8.1 공식").
-- 고도: 국제 표준 대기 근사식. 기준 해면기압은 `current_sea_level_hPa` (초기값 `BMP280_SEA_LEVEL_HPA = 1013.25`).
+- 고도: 국제 표준 대기 근사식. 기준 기압은 `current_sea_level_hPa` (초기값 `BMP280_SEA_LEVEL_HPA = 1013.25`, 부팅 시 `BMP280_ZeroAltitude()`가 부팅 위치 기압으로 덮어씀 → 2-6절).
+
+### 2-6. 부팅 시 고도 0점 (`BMP280_ZeroAltitude`)
+
+**목적**: 고도 공식의 기준 기압 P0가 기본값 1013.25 hPa로 남으면, 그날 날씨에 따라 책상 위에서도 고도가 −42.7 m처럼 나옵니다 ([05_troubleshooting.md](05_troubleshooting.md) 2장). 그래서 부팅 위치의 기압을 기준으로 삼아 **상대 고도**를 출력합니다.
+
+```c
+// bmp280.c
+HAL_StatusTypeDef BMP280_ZeroAltitude(SPI_HandleTypeDef *hspi)
+{
+    float press = 0.0f;
+    HAL_Delay(BMP280_ZERO_SETTLE_MS);   // 50 ms: 첫 측정 결과가 데이터 레지스터를 덮어쓸 때까지
+    HAL_StatusTypeDef status = BMP280_ReadData(hspi, NULL, &press, NULL);
+    if (status != HAL_OK || press <= 0.0f) return HAL_ERROR;
+    BMP280_SetSeaLevelPressure(press);  // 이후 고도 = 부팅 위치 기준
+    return HAL_OK;
+}
+```
+
+| 설계 값 | 근거 |
+|---|---|
+| 50 ms 대기 | ×16 / ×2 오버샘플링 측정 시간 max 43.2 ms (BMP280 데이터시트 Table 13, p.18) + 여유 |
+| IIR 안정화 대기 없음 | 필터는 첫 측정값으로 초기화됨 (BMP280 데이터시트 3.3.3절 p.13–14) |
+| 1회만 읽음 | 측정 주기(약 106 ms) 안에서 여러 번 읽어도 같은 값 → 평균 효과 없음 |
+
+`main.c`에서는 `BMP280_Init()` 성공 직후 한 번 호출하고, 결과를 UART에 출력합니다 (`Altitude zeroed at boot position (Ref: …)`). 초기화 중에는 Chip ID 값도 출력해 배선 문제를 바로 구분할 수 있게 했습니다 (`[SPI1] BMP280 chip ID: 0x58`).
 
 ---
 
@@ -151,7 +177,8 @@ HAL_I2C_Master_Receive(hi2c, ADDR, buffer, 2, 100);
 | 6 | 반환 `HAL_OK` | | |
 
 - 2바이트 전용 분기가 존재하는 이유: STM32F1 I2C 마스터 수신은 N=1, N=2, N≥3 별로 ACK/STOP 타이밍이 다름 (HAL 코드 내 `EV6_3` 주석 확인). 그래서 인터럽트를 잠깐 끄는 구간이 있음.
-- 상위 바이트 우선(`buffer[0] << 8`) 조합은 코드 기준이며, 데이터시트의 바이트 순서/나눗셈 1.2와의 일치는 BH1750 데이터시트에서 확인 필요(페이지 미확인).
+- 상위 바이트 우선(`buffer[0] << 8`) 조합과 `÷ 1.2`는 데이터시트와 일치합니다: 읽기 형식은 High Byte[15:8] → Low Byte[7:0] 순서이고, 예제 계산이 `(2^15 + 2^9 + 2^8 + 2^7 + 2^4) / 1.2 ≒ 28067 lx`입니다 (BH1750FVI 데이터시트 p.7, p.10).
+- 첫 측정 완료까지 max 180 ms가 걸리지만 (BH1750FVI 데이터시트 p.7), `BH1750_Init()`은 10 ms만 기다립니다. 부팅 직후에는 BMP280 초기화·0점 설정·`GOOD` 표시(300 ms)가 이어져 첫 조도 읽기가 그 뒤에 일어나므로 실제 영향은 없습니다. 이후 읽기 주기는 200 ms로 측정 시간보다 깁니다.
 
 ---
 
@@ -210,39 +237,38 @@ int __io_putchar(int ch) {
 호출 체인: `printf` → newlib `_write` ([syscalls.c:80](../Core/Src/syscalls.c), `__io_putchar` 호출) → `HAL_UART_Transmit` (`stm32f1xx_hal_uart.c:1138`).
 
 HAL 동작: `gState` READY 확인 → `TXE` 대기 → `USART2->DR = byte` → `TC` 대기. 한 글자마다 호출되므로 한 줄(약 90 B) 전송 중 CPU는 완전 블로킹 (115200 bps 이론 ≈ 87 µs/바이트).
+
 ---
 
 ## 6. 실행 결과
 
-실기 로그는 프로젝트에 없습니다. 코드상 출력 형식은 다음과 같습니다
+실제 보드에서 Tera Term으로 받은 로그입니다 (500 ms 간격 출력). 부팅 후 보드를 들어 올렸다가 책상 아래로 내렸습니다.
 
-<일반 실내 환경>
 ```
-[ALL SENSORS] Lux:  123.3 lx | Temp: 25.123 C | Press: 1013.250 hPa | Altitude: 12.345 m
-[ALL SENSORS] Lux:  124.2 lx | Temp: 25.128 C | Press: 1013.247 hPa | Altitude: 12.370 m
-[ALL SENSORS] Lux:  122.5 lx | Temp: 25.121 C | Press: 1013.252 hPa | Altitude: 12.328 m
-[ALL SENSORS] Lux:  123.3 lx | Temp: 25.132 C | Press: 1013.249 hPa | Altitude: 12.353 m
-[ALL SENSORS] Lux:  124.2 lx | Temp: 25.126 C | Press: 1013.253 hPa | Altitude: 12.320 m
+[I2C1] BH1750 Light Sensor Initialized Successfully! (0x23)
+[SPI1] BMP280 chip ID: 0x58
+[SPI1] BMP280 Sensor Initialized!
+[SPI1] Altitude zeroed at boot position (Ref: 1015.08 hPa)
+[ALL SENSORS] Lux:    3.3 lx | Temp: 24.694 C | Press: 1015.072 hPa | Altitude:  0.074 m
+[ALL SENSORS] Lux:    4.2 lx | Temp: 24.672 C | Press: 1015.072 hPa | Altitude:  0.074 m
+...                                                         (들어 올림)
+[ALL SENSORS] Lux:    3.3 lx | Temp: 24.682 C | Press: 1014.939 hPa | Altitude:  1.176 m
+...                                                         (책상 아래로 내림)
+[ALL SENSORS] Lux:    0.8 lx | Temp: 24.767 C | Press: 1015.156 hPa | Altitude: -0.629 m
+...                                                         (제자리)
+[ALL SENSORS] Lux:    5.8 lx | Temp: 24.780 C | Press: 1015.067 hPa | Altitude:  0.116 m
 ```
-<손으로 조도 센서를 가렸을 때>
-[ALL SENSORS] Lux:  123.3 lx | Temp: 25.126 C | Press: 1013.250 hPa | Altitude: 12.345 m
-[ALL SENSORS] Lux:   67.5 lx | Temp: 25.131 C | Press: 1013.252 hPa | Altitude: 12.328 m
-[ALL SENSORS] Lux:   15.8 lx | Temp: 25.127 C | Press: 1013.248 hPa | Altitude: 12.362 m
-[ALL SENSORS] Lux:    3.3 lx | Temp: 25.135 C | Press: 1013.251 hPa | Altitude: 12.337 m
-[ALL SENSORS] Lux:    2.5 lx | Temp: 25.130 C | Press: 1013.247 hPa | Altitude: 12.370 m
 
-<손을 치우고 조도 센서에 빛을 비췄을 때>
-[ALL SENSORS] Lux:  123.3 lx | Temp: 25.130 C | Press: 1013.251 hPa | Altitude: 12.337 m
-[ALL SENSORS] Lux:  458.3 lx | Temp: 25.127 C | Press: 1013.248 hPa | Altitude: 12.362 m
-[ALL SENSORS] Lux: 1185.8 lx | Temp: 25.135 C | Press: 1013.252 hPa | Altitude: 12.328 m
-[ALL SENSORS] Lux: 1262.5 lx | Temp: 25.132 C | Press: 1013.249 hPa | Altitude: 12.353 m
-[ALL SENSORS] Lux: 1248.3 lx | Temp: 25.138 C | Press: 1013.247 hPa | Altitude: 12.370 m
+동작 중 BH1750 선을 분리했을 때 (연속 5회 실패 시 1회만 출력):
 
-<센서를 수 cm 정도 조금 들어 올렸을 때>
-[ALL SENSORS] Lux:  123.3 lx | Temp: 25.128 C | Press: 1013.250 hPa | Altitude: 12.345 m
-[ALL SENSORS] Lux:  125.0 lx | Temp: 25.134 C | Press: 1013.247 hPa | Altitude: 12.370 m
-[ALL SENSORS] Lux:  121.7 lx | Temp: 25.130 C | Press: 1013.244 hPa | Altitude: 12.395 m
-[ALL SENSORS] Lux:  124.2 lx | Temp: 25.138 C | Press: 1013.241 hPa | Altitude: 12.420 m
-[ALL SENSORS] Lux:  123.3 lx | Temp: 25.133 C | Press: 1013.243 hPa | Altitude: 12.403 m
+```
+[ALL SENSORS] Lux:  140.8 lx | Temp: 25.653 C | Press: 1014.817 hPa | Altitude:  0.124 m
+[I2C1] BH1750 read FAILED 5 times in a row! Check PB6/PB7 wiring
+[ALL SENSORS] Lux:  140.8 lx | Temp: 25.648 C | Press: 1014.817 hPa | Altitude:  0.124 m
+```
 
 TM1637: 부팅 시 `TEST` → `GOOD`(또는 `ERR `) → 이후 기압 정수(hPa).
+
+- 전체 캡처: [11_teraterm_altitude_lift_lower.png](images/troubleshooting/11_teraterm_altitude_lift_lower.png)
+- 타임스탬프 로그 원본: [teraterm_20261118_timestamp.log](logs/teraterm_20261118_timestamp.log)
+- 검증 기준과 판정: [06_testing_and_results.md](06_testing_and_results.md)

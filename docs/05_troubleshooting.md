@@ -283,7 +283,7 @@ HAL_StatusTypeDef BMP280_ZeroAltitude(SPI_HandleTypeDef *hspi)
 | 항목 | 내용 |
 |---|---|
 | 문제 | 센서 읽기, 느린 비트뱅잉 표시, blocking UART 출력이 한 루프에서 서로를 지연시킬 수 있음 |
-| 구현 | `HAL_GetTick()` 차분 스케줄링, UART는 캐시 값 출력, TM1637은 값 변경 시에만 갱신 (코드 주석 "Dirty Check", "센서 통신 없이 ... 최신 센서 변수들을 출력") |
+| 구현 | `HAL_GetTick()` 차분 스케줄링 (BMP280 100 ms / BH1750 200 ms / UART 500 ms), UART는 캐시 값 출력, TM1637은 값 변경 시에만 갱신 (코드 주석 "Dirty Check", "센서 통신 없이 ... 최신 센서 변수들을 출력") |
 
 ### 3-4. 초기화 실패를 사용자에게 가시화
 

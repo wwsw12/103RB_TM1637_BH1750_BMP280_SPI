@@ -61,7 +61,9 @@ GPIO_InitStruct.Pull = GPIO_PULLUP;   // F1 출력 모드에서는 HAL이 사용
 
 - **`GPIO_PULLUP`은 실제로 적용되지 않음**: STM32F1은 출력 모드에서 내부 풀업/풀다운이 꺼집니다 (RM0008 Table 20 p.161, 9.1.8절 p.163). HAL도 `GPIO_MODE_OUTPUT_OD`에서는 `Pull` 값을 레지스터에 쓰지 않습니다 (`stm32f1xx_hal_gpio.c` `case GPIO_MODE_OUTPUT_OD`). DIO의 High는 TM1637 모듈의 외부 풀업이 만듭니다 ([02_hardware.md](02_hardware.md) 4-1절).
 
-- **왜 DIO만 Open-Drain인가**: ACK 비트에서 TM1637이 DIO를 구동하므로 MCU는 라인을 놓아야 함 .
+- **왜 CLK·DIO 모두 Open-Drain인가**
+  - DIO: ACK 비트에서 TM1637이 DIO를 Low로 구동하므로, MCU는 라인을 놓아야(High-Z) 충돌 없이 읽을 수 있습니다.
+  - CLK: TM1637은 5 V로 동작해 V<sub>IH</sub> = 0.7 × VDD입니다 (TM1637 데이터시트 p.14). Push-Pull 3.3 V로는 부족해서, High를 모듈의 10 kΩ 풀업이 5 V로 만들게 했습니다. 실측 CLK High 4.909 V ([02_hardware.md](02_hardware.md) 4-1절, [06_testing_and_results.md](06_testing_and_results.md) 2-4절).
 - 핀 속도 `GPIO_SPEED_FREQ_HIGH`는 F1에서 MODE=11(최대 50 MHz 슬루) 설정입니다.
 
 ## 4. I2C1 (BH1750)
@@ -75,15 +77,25 @@ GPIO_InitStruct.Pull = GPIO_PULLUP;   // F1 출력 모드에서는 HAL이 사용
 | 핀 | PB6(SCL), PB7(SDA) **AF Open-Drain**, High speed | `HAL_I2C_MspInit` |
 | 클럭 | `__HAL_RCC_I2C1_CLK_ENABLE()` (APB1) | |
 
+**HAL이 계산해 넣는 레지스터 값** (PCLK1 = 32 MHz)
+
+| 레지스터 | 값 | 계산 | 근거 |
+|---|---|---|---|
+| `I2C_CR2.FREQ` | 32 (0x20) | PCLK1을 MHz 단위로 입력 | RM0008 26.6.2 |
+| `I2C_CCR` | 160 (0xA0), F/S = 0 | Standard mode: T<sub>high</sub> = T<sub>low</sub> = CCR × T<sub>PCLK1</sub> → CCR = 32 MHz ÷ (2 × 100 kHz) = 160 | RM0008 26.6.8, p.781 |
+| `I2C_TRISE` | 33 (0x21) | Sm 최대 상승 시간 1000 ns ÷ 31.25 ns + 1 = 33 | RM0008 26.6.9, p.782 |
+
+디버거로 읽은 실제 레지스터 값도 위와 같습니다 ([06_testing_and_results.md](06_testing_and_results.md) 4절).
+
 ## 5. SPI1 (BMP280)
 
 | 항목 | 값 | 선택 이유 |
 |---|---|---|
 | Mode | Master, Full-Duplex 2-line | BMP280 4-wire SPI |
 | DataSize | 8-bit, MSB first | BMP280 레지스터 프레임 |
-| **CPOL / CPHA** | **High / 2nd edge → SPI Mode 3** | BMP280은 Mode3(계속 측정 모드) |
+| **CPOL / CPHA** | **High / 2nd edge → SPI Mode 3** | BMP280은 SPI Mode '00'과 '11'을 모두 지원 (BMP280 데이터시트 5.3절 p.30). CPOL/CPHA는 클럭 극성·샘플링 에지 설정이며, 센서의 측정 모드(Normal/Forced)와는 무관 |
 | NSS | `SPI_NSS_SOFT` + GPIO `PA4` |  |
-| Prescaler | **÷8** | 64 MHz(APB2)/8 = **8 MHz** (`.ioc`: 8.0 MBits/s) |
+| Prescaler | **÷8** | 64 MHz(APB2)/8 = **8 MHz** (`.ioc`: 8.0 MBits/s). BMP280 SPI 최대 10 MHz (BMP280 데이터시트 p.2) 이내. 레지스터 `SPI1->CR1` = 0x357 확인 |
 | CRC / TI mode | Disable | |
 | 핀 | PA5, PA7 AF Push-Pull / PA6 Input | `HAL_SPI_MspInit` |
 | 클럭 | `__HAL_RCC_SPI1_CLK_ENABLE()` (APB2) | |
@@ -95,3 +107,12 @@ GPIO_InitStruct.Pull = GPIO_PULLUP;   // F1 출력 모드에서는 HAL이 사용
 | Baud | 115200, 8N1, 흐름제어 없음, Oversampling ×16, Mode TX/RX |
 | 핀 | PA2 AF-PP (TX), PA3 Input (RX) |
 | 버스 | APB1 (32 MHz) — `UART_SetConfig`가 USART1만 PCLK2, 그 외는 PCLK1 사용 (`stm32f1xx_hal_uart.c:3735~3742`에서 확인) |
+
+**보레이트 레지스터 계산** (RM0008 27.3.4, 27.6.3 p.820)
+
+| 단계 | 값 |
+|---|---|
+| USARTDIV = f<sub>PCLK1</sub> ÷ (16 × 115200) | 32,000,000 ÷ 1,843,200 = 17.36 |
+| DIV_Mantissa / DIV_Fraction | 17 (0x11) / 0.36 × 16 = 5.8 → 6 |
+| `USART_BRR` | **0x116** (디버거 확인 값과 일치) |
+| 실제 보레이트 | 32 MHz ÷ (16 × 17.375) = 115,108 bps (오차 약 −0.08 %) |
